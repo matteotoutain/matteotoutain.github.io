@@ -1,51 +1,27 @@
 // app.js
 // Front GitHub Pages : lit les fichiers pré-calculés d'un AUTRE dépôt.
 //
-// ✔️ A ADAPTER : les 3 URL ci-dessous vers ton autre repo GitHub
-//    (brut ou GitHub Pages : raw.githubusercontent.com ou /precomputed/...).
-
 const URL_METADATA = "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/metadata.json";
 const URL_PROBA_GLOBAL = "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/proba_global.csv";
 const URL_STATIONS = "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/stations.json";
 
-// Si besoin tu pourras exploiter proba_od.parquet côté backend,
-// mais ici on reste 100 % statique, donc non utilisé en JS.
+// Colonnes de proba_global.csv
+const COL_DELTA_DAYS = "delta_days";
+const COL_PROBA_OPEN = "proba_open";
 
-// ========================
-// 0. Colonnes attendues
-// ========================
-//
-// ➜ Aligne ces noms sur l'en-tête de proba_global.csv
-//    (une seule modif à faire ici si ton CSV est différent).
+// Données en mémoire
+let globalRows = []; // [{ delta_days: number, proba_open: number }]
+let metaData = null;
+let stations = [];
 
-const COL_DATE = "date";
-const COL_ORIGIN = "origine";
-const COL_DEST = "destination";
-const COL_PROB_OPEN = "prob_open";            // ex: prob_open
-const COL_HIST_RATE = "historical_open_rate"; // ex: historical_open_rate
-const COL_N_OBS = "n_observations";           // ex: n_observations
-
-// ========================
-// 1. Data en mémoire
-// ========================
-
-let allRows = [];                 // lignes issues de proba_global.csv normalisées
-let uniqueOrigins = [];           // liste des origines
-let uniqueDestinationsByOrigin = {}; // { origine: [dest1, dest2, ...] }
-let metaData = null;              // contenu de metadata.json (optionnel)
-let stations = [];                // contenu de stations.json (optionnel)
-
-// ========================
-// 2. Helpers DOM
-// ========================
-
+// Helpers DOM
 function $(id) {
   return document.getElementById(id);
 }
 
-// ========================
-// 3. Chargement des données
-// ========================
+// =========================================================
+// 1. Chargement global (metadata + proba_global + stations)
+// =========================================================
 
 async function loadAll() {
   try {
@@ -60,7 +36,6 @@ async function loadAll() {
       metaData = await metaRes.json();
       updateMetadataLine();
     } else {
-      console.warn("metadata.json non disponible :", metaRes.status);
       $("meta-line").textContent = "Métadonnées non disponibles.";
     }
 
@@ -70,24 +45,28 @@ async function loadAll() {
     }
     const csvText = await probaRes.text();
     const rawRows = parseCSV(csvText);
-    allRows = rawRows.map(normalizeRow).filter((r) => !!r.origine && !!r.destination);
+    globalRows = rawRows
+      .map(normalizeGlobalRow)
+      .filter((r) => Number.isFinite(r.delta_days) && Number.isFinite(r.proba_open));
 
-    if (!allRows.length) {
+    if (!globalRows.length) {
       throw new Error("proba_global.csv ne contient aucune ligne exploitable.");
     }
 
-    buildOriginDestinationMaps();
+    // Tri par delta_days pour faciliter les recherches
+    globalRows.sort((a, b) => a.delta_days - b.delta_days);
 
-    // ----- stations.json (optionnel) -----
+    // ----- stations.json -----
     if (stationsRes.ok) {
       stations = await stationsRes.json();
+      populateStations();
     } else {
       console.warn("stations.json non disponible :", stationsRes.status);
     }
 
-    populateOriginSelect();
-    prefillDateIfPossible();
+    prefillDateToday();
     setStatus("Données chargées, sélectionne un trajet.", "neutral");
+    updateRangeInfo();
   } catch (err) {
     console.error("Erreur lors du chargement des données :", err);
     showFatalError(
@@ -96,7 +75,7 @@ async function loadAll() {
   }
 }
 
-// Affiche la ligne de métadonnées en haut (à partir de metadata.json)
+// Affiche la ligne de métadonnées (volumes uniquement)
 function updateMetadataLine() {
   const el = $("meta-line");
   if (!metaData) {
@@ -104,33 +83,21 @@ function updateMetadataLine() {
     return;
   }
 
-  const last = metaData.last_snapshot_date || metaData.last_date || "n.c.";
-  const first = metaData.first_snapshot_date || metaData.first_date || null;
-  const nDays = metaData.n_days || metaData.nb_jours || null;
-  const nTrips = metaData.n_trips || metaData.nb_trajets || metaData.n_od || null;
+  const genAt = metaData.generated_at_utc || "n.c.";
+  const nRaw = metaData.n_rows_raw || "n.c.";
+  const nEnriched = metaData.n_rows_enriched || "n.c.";
+  const nStations = metaData.n_stations || "n.c.";
+  const nGlobal = metaData.n_rows_proba_global || "n.c.";
+  const nOd = metaData.n_rows_proba_od || "n.c.";
 
-  let parts = [];
-  if (first && last) {
-    parts.push(`Période couverte : ${first} → ${last}`);
-  } else {
-    parts.push(`Dernier snapshot : ${last}`);
-  }
-  if (nDays) {
-    parts.push(`${nDays} jours observés`);
-  }
-  if (nTrips) {
-    parts.push(`${nTrips} trajets OD`);
-  }
-
-  el.textContent = parts.join(" • ");
+  el.textContent =
+    `Généré le ${genAt} • ${nRaw} lignes brutes • ${nEnriched} lignes enrichies • ` +
+    `${nStations} gares • ${nGlobal} lignes globales • ${nOd} OD détaillés`;
 }
 
-// ========================
-// 4. Parsing CSV simple
-// ========================
-//
-// Gère séparateur "," ou ";" (auto-détection sur la première ligne).
-//
+// =========================================================
+// 2. Parsing CSV (simple, séparateur auto ; ou , )
+// =========================================================
 
 function parseCSV(text) {
   const trimmed = text.trim();
@@ -158,101 +125,63 @@ function parseCSV(text) {
   return rows;
 }
 
-// Normalise les noms de colonnes pour avoir une structure uniforme
-function normalizeRow(raw) {
+// Normalisation d'une ligne de proba_global.csv
+function normalizeGlobalRow(raw) {
   return {
-    date: raw[COL_DATE] || null,
-    origine: raw[COL_ORIGIN] || null,
-    destination: raw[COL_DEST] || null,
-    prob_open: parseFloat(raw[COL_PROB_OPEN] || "NaN"),
-    historical_open_rate: parseFloat(raw[COL_HIST_RATE] || "NaN"),
-    n_observations: parseInt(raw[COL_N_OBS] || "0", 10)
+    delta_days: parseInt(raw[COL_DELTA_DAYS] || "NaN", 10),
+    proba_open: parseFloat(raw[COL_PROBA_OPEN] || "NaN")
   };
 }
 
-// ========================
-// 5. Construction OD
-// ========================
+// =========================================================
+// 3. Stations : remplissage des selects
+// =========================================================
 
-function buildOriginDestinationMaps() {
-  const originSet = new Set();
-  const destMap = {};
-
-  allRows.forEach((row) => {
-    const o = row.origine;
-    const d = row.destination;
-    if (!o || !d) return;
-
-    originSet.add(o);
-    if (!destMap[o]) destMap[o] = new Set();
-    destMap[o].add(d);
-  });
-
-  uniqueOrigins = Array.from(originSet).sort((a, b) => a.localeCompare(b, "fr"));
-  uniqueDestinationsByOrigin = {};
-  for (const [origin, destSet] of Object.entries(destMap)) {
-    uniqueDestinationsByOrigin[origin] = Array.from(destSet).sort((a, b) =>
-      a.localeCompare(b, "fr")
-    );
-  }
-}
-
-// ========================
-// 6. Form controls
-// ========================
-
-function populateOriginSelect() {
+function populateStations() {
   const originSelect = $("origin-select");
+  const destSelect = $("destination-select");
+
   originSelect.innerHTML = '<option value="">Sélectionner une origine…</option>';
+  destSelect.innerHTML = '<option value="">Sélectionner une destination…</option>';
 
-  uniqueOrigins.forEach((origin) => {
-    const opt = document.createElement("option");
-    opt.value = origin;
-    opt.textContent = origin;
-    originSelect.appendChild(opt);
+  if (!Array.isArray(stations) || !stations.length) return;
+
+  stations.forEach((name) => {
+    const opt1 = document.createElement("option");
+    opt1.value = name;
+    opt1.textContent = name;
+    originSelect.appendChild(opt1);
+
+    const opt2 = document.createElement("option");
+    opt2.value = name;
+    opt2.textContent = name;
+    destSelect.appendChild(opt2);
   });
 }
 
-function populateDestinationSelect(origin) {
-  const destinationSelect = $("destination-select");
-  destinationSelect.innerHTML =
-    '<option value="">Sélectionner une destination…</option>';
-
-  const list = uniqueDestinationsByOrigin[origin] || [];
-  list.forEach((dest) => {
-    const opt = document.createElement("option");
-    opt.value = dest;
-    opt.textContent = dest;
-    destinationSelect.appendChild(opt);
-  });
+// Date par défaut = aujourd'hui
+function prefillDateToday() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  $("date-select").value = `${yyyy}-${mm}-${dd}`;
 }
 
-// Préremplit la date avec la plus récente dispo dans proba_global.csv
-function prefillDateIfPossible() {
-  if (!allRows.length) return;
-  const dates = Array.from(
-    new Set(allRows.map((r) => r.date).filter(Boolean))
-  ).sort();
-  if (!dates.length) return;
-  const mostRecent = dates[dates.length - 1];
-  $("date-select").value = mostRecent;
+// Affiche l'intervalle de delta_days couvert par le modèle
+function updateRangeInfo() {
+  if (!globalRows.length) {
+    $("range-value").textContent = "–";
+    return;
+  }
+  const minDelta = globalRows[0].delta_days;
+  const maxDelta = globalRows[globalRows.length - 1].delta_days;
+  $("range-value").textContent = `${minDelta} → ${maxDelta}`;
 }
 
-// ========================
-// 7. Gestion erreurs globales
-// ========================
-
-function showFatalError(message) {
-  $("result-status").textContent = message;
-  $("result-status").className = "result-status result-status--negative";
-  $("probability-value").textContent = "–";
-  $("historical-rate-value").textContent = "–";
-  $("observations-value").textContent = "–";
-}
-
-// ========================
-// 8. Logique de calcul
-// ========================
+// =========================================================
+// 4. Calcul de la proba pour une date choisie
+// =========================================================
 
 function onComputeClick() {
   const dateStr = $("date-select").value;
@@ -261,141 +190,59 @@ function onComputeClick() {
 
   resetMessages();
 
-  if (!dateStr || !origin || !destination) {
-    setStatus(
-      "Merci de sélectionner une date, une origine et une destination.",
-      "warning"
-    );
+  if (!dateStr) {
+    setStatus("Merci de sélectionner une date.", "warning");
     return;
   }
 
-  // 1) Filtre sur le couple OD
-  const rowsForOD = allRows.filter(
-    (r) => r.origine === origin && r.destination === destination
-  );
+  if (!origin || !destination) {
+    setStatus("Sélectionne aussi une origine et une destination.", "warning");
+    // On ne bloque pas forcément le calcul de la proba globale,
+    // mais on demande quand même un trajet complet pour l’UX.
+  }
 
-  if (!rowsForOD.length) {
-    // Trajet jamais vu dans proba_global.csv → pas un trajet réel dans l'historique
-    setStatus("Trajet inexistant dans les données historiques.", "negative");
-    $("probability-value").textContent = "–";
-    $("historical-rate-value").textContent = "–";
-    $("observations-value").textContent = "0";
-    showWarning(
-      "<strong>Ce couple origine / destination n'apparaît jamais</strong> dans " +
-        "<code>proba_global.csv</code>. On ne calcule donc <em>aucune</em> probabilité."
-    );
+  const delta = computeDeltaDaysFromToday(dateStr);
+  $("delta-value").textContent = String(delta);
+
+  if (!globalRows.length) {
+    showFatalError("Les données globales ne sont pas disponibles.");
     return;
   }
 
-  // 2) Filtre sur la date exacte
-  const rowsForExactDate = rowsForOD.filter((r) => r.date === dateStr);
+  const minDelta = globalRows[0].delta_days;
+  const maxDelta = globalRows[globalRows.length - 1].delta_days;
 
-  let row;
-  const hasExactDate = rowsForExactDate.length > 0;
-
-  if (hasExactDate) {
-    row = rowsForExactDate[0]; // en principe unique
-  } else {
-    // Fallback : moyenne historique de cet OD (tout proba_global.csv)
-    row = buildAggregatedRow(rowsForOD);
+  let warningHtml = "";
+  if (delta < minDelta || delta > maxDelta) {
+    warningHtml +=
+      `La date choisie (delta = ${delta}) est <strong>hors de la plage</strong> couverte par le modèle ` +
+      `(<code>${minDelta}</code> → <code>${maxDelta}</code>). ` +
+      "La valeur affichée est extrapolée à partir du delta le plus proche.";
   }
 
-  updateResult(row, rowsForOD.length, hasExactDate, dateStr);
-}
-
-function buildAggregatedRow(rowsForOD) {
-  const n = rowsForOD.length;
-  const meanProb =
-    rowsForOD.reduce((acc, r) => acc + (Number.isFinite(r.prob_open) ? r.prob_open : 0), 0) / n;
-  const meanHist =
-    rowsForOD.reduce(
-      (acc, r) =>
-        acc +
-        (Number.isFinite(r.historical_open_rate) ? r.historical_open_rate : 0),
-      0
-    ) / n;
-
-  const base = rowsForOD[0];
-  return {
-    date: null,
-    origine: base.origine,
-    destination: base.destination,
-    prob_open: meanProb,
-    historical_open_rate: meanHist,
-    n_observations: n
-  };
-}
-
-function updateResult(row, totalForOD, hasExactDate, dateStr) {
-  const prob = Number.isFinite(row.prob_open) ? row.prob_open : null;
-  const hist = Number.isFinite(row.historical_open_rate)
-    ? row.historical_open_rate
-    : null;
-  const nObs =
-    row.n_observations && row.n_observations > 0
-      ? row.n_observations
-      : totalForOD;
-
-  $("probability-value").textContent =
-    prob == null ? "–" : (prob * 100).toFixed(0) + " %";
-  $("historical-rate-value").textContent =
-    hist == null ? "–" : (hist * 100).toFixed(0) + " %";
-  $("observations-value").textContent = nObs == null ? "–" : String(nObs);
-
-  if (prob == null) {
-    setStatus(
-      "Pas assez de données fiables pour estimer cette probabilité.",
-      "warning"
-    );
-    showWarning(
-      "Les données existantes pour ce trajet sont trop faibles ou incomplètes " +
-        "pour produire une estimation robuste."
-    );
+  // Cherche la ligne de delta_days la plus proche
+  const row = findClosestDeltaRow(delta);
+  if (!row) {
+    showFatalError("Impossible de trouver une probabilité globale pour ce delta.");
     return;
   }
 
-  // Statut visuel en fonction de la probabilité
-  if (prob >= 0.7) {
-    setStatus(
-      hasExactDate
-        ? "Trajet fréquemment ouvert TGVmax pour cette date."
-        : "Trajet souvent ouvert TGVmax (moyenne historique).",
-      "positive"
-    );
-  } else if (prob <= 0.3) {
-    setStatus(
-      hasExactDate
-        ? "Trajet rarement ouvert TGVmax à cette date."
-        : "Trajet peu ouvert TGVmax en moyenne.",
-      "negative"
-    );
-  } else {
-    setStatus(
-      hasExactDate
-        ? "Zone grise : ouverture TGVmax incertaine pour cette date."
-        : "Zone grise : historique mitigé sur ce trajet.",
-      "neutral"
-    );
+  updateGlobalResult(row, delta);
+
+  if (warningHtml) {
+    showWarning(warningHtml);
   }
 
-  if (!hasExactDate) {
-    showWarning(
-      "Aucune ligne exacte dans <code>proba_global.csv</code> pour la date sélectionnée " +
-        `(<code>${dateStr}</code>). La probabilité affichée est une <strong>moyenne historique</strong> ` +
-        "sur ce couple origine / destination."
-    );
-  }
-
-  // Debug pour contrôle (désactivable en CSS)
+  // Debug soft
   const dbg = $("debug-info");
   dbg.innerHTML =
     "<strong>Debug :</strong> " +
     JSON.stringify(
       {
         date_selectionnee: dateStr,
-        row_utilisee: row,
-        total_OD: totalForOD,
-        date_exacte_disponible: hasExactDate
+        delta_calcule: delta,
+        delta_retourne: row.delta_days,
+        proba_open: row.proba_open
       },
       null,
       2
@@ -405,9 +252,78 @@ function updateResult(row, totalForOD, hasExactDate, dateStr) {
   dbg.classList.remove("hidden");
 }
 
-// ========================
-// 9. Gestion des messages
-// ========================
+// Conversion date → delta_days (date - aujourd'hui)
+function computeDeltaDaysFromToday(dateStr) {
+  // dateStr = "YYYY-MM-DD"
+  const travel = new Date(dateStr + "T00:00:00");
+  const today = new Date();
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const diffMs = travel.getTime() - todayMidnight.getTime();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  return diffDays;
+}
+
+// Trouve la ligne avec le delta_days le plus proche
+function findClosestDeltaRow(delta) {
+  if (!globalRows.length) return null;
+  let best = globalRows[0];
+  let bestDist = Math.abs(best.delta_days - delta);
+
+  for (let i = 1; i < globalRows.length; i++) {
+    const r = globalRows[i];
+    const dist = Math.abs(r.delta_days - delta);
+    if (dist < bestDist) {
+      best = r;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
+
+// Mise à jour de la carte résultat
+function updateGlobalResult(row, requestedDelta) {
+  const prob = Number.isFinite(row.proba_open) ? row.proba_open : null;
+
+  $("probability-value").textContent =
+    prob == null ? "–" : (prob * 100).toFixed(0) + " %";
+
+  if (prob == null) {
+    setStatus(
+      "Pas assez de données fiables pour estimer cette probabilité globale.",
+      "warning"
+    );
+    return;
+  }
+
+  // Statut visuel simple suivant la proba
+  if (prob >= 0.7) {
+    setStatus(
+      "Probabilité globale élevée d'ouverture TGVmax pour ce delta.",
+      "positive"
+    );
+  } else if (prob <= 0.3) {
+    setStatus(
+      "Probabilité globale faible d'ouverture TGVmax pour ce delta.",
+      "negative"
+    );
+  } else {
+    setStatus(
+      "Probabilité globale intermédiaire : ouverture incertaine.",
+      "neutral"
+    );
+  }
+}
+
+// =========================================================
+// 5. Gestion des messages / erreurs
+// =========================================================
+
+function showFatalError(message) {
+  $("result-status").textContent = message;
+  $("result-status").className = "result-status result-status--negative";
+  $("probability-value").textContent = "–";
+  $("delta-value").textContent = "–";
+}
 
 function resetMessages() {
   setStatus("Calcul en attente…", "neutral");
@@ -447,17 +363,12 @@ function showWarning(html) {
   w.classList.remove("hidden");
 }
 
-// ========================
-// 10. Listeners
-// ========================
+// =========================================================
+// 6. Listeners
+// =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
   loadAll();
-
-  $("origin-select").addEventListener("change", (e) => {
-    populateDestinationSelect(e.target.value);
-  });
-
   $("compute-btn").addEventListener("click", () => {
     onComputeClick();
   });
