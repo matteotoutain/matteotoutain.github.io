@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>TGVmax – Probabilité d'ouverture</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>📈 TGVmax – Probabilité d'ouverture</h1>
+      <p class="subtitle">
+        Estimation de la probabilité d'ouverture TGVmax pour un trajet donné,
+        à partir des données publiques SNCF (snapshots historiques).
+      </p>
+    </header>
+
+    <main class="app-main">
+      <section class="card controls-card">
+        <h2>Paramètres du trajet</h2>
+
+        <div class="form-group">
+          <label for="date-select">Date de circulation</label>
+          <input type="date" id="date-select" />
+        </div>
+
+        <div class="form-group">
+          <label for="origin-select">Gare de départ</label>
+          <select id="origin-select">
+            <option value="">Sélectionner une origine…</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="destination-select">Gare d'arrivée</label>
+          <select id="destination-select">
+            <option value="">Sélectionner une destination…</option>
+          </select>
+        </div>
+
+        <button id="compute-btn" class="primary-btn">
+          Calculer la probabilité
+        </button>
+
+        <p class="hint">
+          Les gares proposées proviennent des données historiques TGVmax.  
+          Certains couples origine / destination peuvent ne jamais exister.
+        </p>
+      </section>
+
+      <section class="card result-card">
+        <h2>Résultat</h2>
+
+        <div id="result-status" class="result-status result-status--neutral">
+          En attente d'un trajet…
+        </div>
+
+        <div class="result-grid">
+          <div class="result-item">
+            <span class="result-label">Probabilité d'ouverture</span>
+            <span id="probability-value" class="result-value">–</span>
+          </div>
+
+          <div class="result-item">
+            <span class="result-label">Historique d'ouverture</span>
+            <span id="historical-rate-value" class="result-value">–</span>
+          </div>
+
+          <div class="result-item">
+            <span class="result-label">Nombre de jours observés</span>
+            <span id="observations-value" class="result-value">–</span>
+          </div>
+        </div>
+
+        <div id="warning-box" class="warning-box hidden"></div>
+        <div id="debug-info" class="debug-info hidden"></div>
+      </section>
+
+      <section class="card info-card">
+        <h2>Comment lire cette estimation ?</h2>
+        <ul>
+          <li>
+            <strong>Probabilité d'ouverture</strong> : estimation pour la date choisie,
+            basée sur les snapshots des jours similaires.
+          </li>
+          <li>
+            <strong>Historique d'ouverture</strong> : fréquence observée d'ouverture
+            pour ce trajet sur la période d'entraînement.
+          </li>
+          <li>
+            <strong>Message spécial “trajet inexistant”</strong> :
+            si aucune observation n'existe pour ce couple origine / destination,
+            on te le dit clairement plutôt que de sortir une proba bidon.
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>
+        Projet perso – données SNCF open data – interface statique GitHub Pages.
+      </span>
+      <span class="footer-right">
+        Code source sur GitHub • Modèle pré-calculé hors navigateur
+      </span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
