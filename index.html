@@ -12,11 +12,15 @@
       <h1>📈 TGVmax – Probabilité d'ouverture</h1>
       <p class="subtitle">
         Estimation de la probabilité d'ouverture TGVmax pour un trajet donné,
-        à partir des données publiques SNCF (snapshots historiques).
+        à partir des données pré-calculées hébergées sur un autre dépôt GitHub.
+      </p>
+      <p id="meta-line" class="subtitle" style="font-size:0.8rem; opacity:0.8;">
+        Chargement des métadonnées…
       </p>
     </header>
 
     <main class="app-main">
+      <!-- Colonne gauche : contrôles -->
       <section class="card controls-card">
         <h2>Paramètres du trajet</h2>
 
@@ -44,11 +48,14 @@
         </button>
 
         <p class="hint">
-          Les gares proposées proviennent des données historiques TGVmax.  
-          Certains couples origine / destination peuvent ne jamais exister.
+          Les gares proposées proviennent des données agrégées 
+          (<code>proba_global.csv</code>).<br />
+          Si un couple origine / destination n’existe pas dans l’historique, 
+          on affiche un message explicite plutôt qu’une proba bidon.
         </p>
       </section>
 
+      <!-- Colonne droite : résultats -->
       <section class="card result-card">
         <h2>Résultat</h2>
 
@@ -77,21 +84,25 @@
         <div id="debug-info" class="debug-info hidden"></div>
       </section>
 
+      <!-- Bloc explications -->
       <section class="card info-card">
         <h2>Comment lire cette estimation ?</h2>
         <ul>
           <li>
             <strong>Probabilité d'ouverture</strong> : estimation pour la date choisie,
-            basée sur les snapshots des jours similaires.
+            basée sur <code>proba_global.csv</code>.
           </li>
           <li>
             <strong>Historique d'ouverture</strong> : fréquence observée d'ouverture
             pour ce trajet sur la période d'entraînement.
           </li>
           <li>
-            <strong>Message spécial “trajet inexistant”</strong> :
-            si aucune observation n'existe pour ce couple origine / destination,
-            on te le dit clairement plutôt que de sortir une proba bidon.
+            <strong>Trajet inexistant</strong> : si le couple origine / destination
+            n’apparaît jamais dans <code>proba_global.csv</code>, on te le dit clairement.
+          </li>
+          <li>
+            <strong>Métadonnées</strong> : la ligne au-dessus résume ce que dit
+            <code>metadata.json</code> (période couverte, dernier snapshot, etc.).
           </li>
         </ul>
       </section>
@@ -99,10 +110,10 @@
 
     <footer class="app-footer">
       <span>
-        Projet perso – données SNCF open data – interface statique GitHub Pages.
+        Front statique GitHub Pages – données et calculs hébergés sur un autre dépôt.
       </span>
       <span class="footer-right">
-        Code source sur GitHub • Modèle pré-calculé hors navigateur
+        Fichiers utilisés : <code>metadata.json</code>, <code>proba_global.csv</code>, <code>stations.json</code>
       </span>
     </footer>
   </div>
