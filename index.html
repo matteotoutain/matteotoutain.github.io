@@ -2,17 +2,18 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>TGVmax – Probabilité d'ouverture</title>
+  <title>TGVmax – Probabilité globale d'ouverture</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app-container">
     <header class="app-header">
-      <h1>📈 TGVmax – Probabilité d'ouverture</h1>
+      <h1>📈 TGVmax – Probabilité globale d'ouverture</h1>
       <p class="subtitle">
-        Estimation de la probabilité d'ouverture TGVmax pour un trajet donné,
-        à partir des données pré-calculées hébergées sur un autre dépôt GitHub.
+        Estimation de la probabilité <strong>globale</strong> d'ouverture TGVmax
+        en fonction du nombre de jours avant le départ, à partir des données
+        pré-calculées sur un autre dépôt GitHub.
       </p>
       <p id="meta-line" class="subtitle" style="font-size:0.8rem; opacity:0.8;">
         Chargement des métadonnées…
@@ -44,14 +45,13 @@
         </div>
 
         <button id="compute-btn" class="primary-btn">
-          Calculer la probabilité
+          Calculer la probabilité globale
         </button>
 
         <p class="hint">
-          Les gares proposées proviennent des données agrégées 
-          (<code>proba_global.csv</code>).<br />
-          Si un couple origine / destination n’existe pas dans l’historique, 
-          on affiche un message explicite plutôt qu’une proba bidon.
+          Les gares proposées viennent de <code>stations.json</code>.  
+          La probabilité affichée est <strong>globale</strong> : elle dépend du
+          nombre de jours avant le départ, pas de l’itinéraire.
         </p>
       </section>
 
@@ -65,18 +65,18 @@
 
         <div class="result-grid">
           <div class="result-item">
-            <span class="result-label">Probabilité d'ouverture</span>
+            <span class="result-label">Probabilité globale d'ouverture</span>
             <span id="probability-value" class="result-value">–</span>
           </div>
 
           <div class="result-item">
-            <span class="result-label">Historique d'ouverture</span>
-            <span id="historical-rate-value" class="result-value">–</span>
+            <span class="result-label">Delta jours (date - aujourd'hui)</span>
+            <span id="delta-value" class="result-value">–</span>
           </div>
 
           <div class="result-item">
-            <span class="result-label">Nombre de jours observés</span>
-            <span id="observations-value" class="result-value">–</span>
+            <span class="result-label">Delta couvert par le modèle</span>
+            <span id="range-value" class="result-value">–</span>
           </div>
         </div>
 
@@ -89,20 +89,25 @@
         <h2>Comment lire cette estimation ?</h2>
         <ul>
           <li>
-            <strong>Probabilité d'ouverture</strong> : estimation pour la date choisie,
-            basée sur <code>proba_global.csv</code>.
+            <strong>Probabilité globale</strong> : issue de
+            <code>proba_global.csv</code>, pour un certain <code>delta_days</code>
+            (jours entre aujourd’hui et la date du train).
           </li>
           <li>
-            <strong>Historique d'ouverture</strong> : fréquence observée d'ouverture
-            pour ce trajet sur la période d'entraînement.
+            <strong>Delta jours</strong> : si tu choisis une date à J+7, on regarde
+            la ligne <code>delta_days = 7</code>. S’il n’y en a pas, on prend
+            le <strong>delta le plus proche</strong> dans le fichier.
           </li>
           <li>
-            <strong>Trajet inexistant</strong> : si le couple origine / destination
-            n’apparaît jamais dans <code>proba_global.csv</code>, on te le dit clairement.
+            <strong>Saturation du modèle</strong> : si tu choisis une date
+            très loin (avant le min ou après le max couvert), un message te
+            prévient qu’on extrapole fortement.
           </li>
           <li>
-            <strong>Métadonnées</strong> : la ligne au-dessus résume ce que dit
-            <code>metadata.json</code> (période couverte, dernier snapshot, etc.).
+            <strong>Origine / Destination</strong> : gérées côté interface pour
+            coller à la version Streamlit, mais la proba globale ne dépend que
+            de <code>delta_days</code>. Les effets OD détaillés restent gérés
+            par le backend (fichier <code>proba_od.parquet</code>).
           </li>
         </ul>
       </section>
@@ -110,7 +115,7 @@
 
     <footer class="app-footer">
       <span>
-        Front statique GitHub Pages – données et calculs hébergés sur un autre dépôt.
+        Front statique GitHub Pages – données et calculs sur un dépôt backend.
       </span>
       <span class="footer-right">
         Fichiers utilisés : <code>metadata.json</code>, <code>proba_global.csv</code>, <code>stations.json</code>
