@@ -2,138 +2,146 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>TGVmax – Probabilité d'ouverture</title>
+  <title>MaxCast – Prévision TGVmax</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- favicon (optionnel) -->
+  <link rel="icon" href="icon.png" />
+
   <link rel="stylesheet" href="style.css" />
-  <!-- Chart.js pour la courbe de probabilité -->
+
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-  <div class="app-container">
-    <header class="app-header">
-      <h1>📈 TGVmax – Probabilité d'ouverture</h1>
-      <p class="subtitle">
-        Estimation de la probabilité d'ouverture TGVmax pour un trajet donné,
-        à partir des données pré-calculées du dépôt backend.
+  <div class="page">
+    <!-- HERO -->
+    <header class="hero">
+      <div class="hero__logo">
+        <img src="blacklogo.png" alt="MaxCast" />
+      </div>
+
+      <h1 class="hero__title">MaxCast – Prévision TGVmax</h1>
+
+      <p class="hero__subtitle">
+        Estime la date la plus probable d’ouverture TGVmax pour ton trajet,
+        à partir de données historiques issues des snapshots de réservation.
       </p>
-      <p id="meta-line" class="subtitle" style="font-size:0.8rem; opacity:0.8;">
-        Chargement des métadonnées…
-      </p>
+
+      <p id="meta-line" class="hero__meta">Chargement des métadonnées…</p>
     </header>
 
-    <main class="app-main">
-      <!-- Colonne gauche : contrôles -->
-      <section class="card controls-card">
-        <h2>Paramètres du trajet</h2>
+    <!-- MAIN -->
+    <main class="content">
+      <!-- PARAMS -->
+      <section class="panel">
+        <h2 class="panel__title">Paramètres du trajet</h2>
 
-        <div class="form-group">
-          <label for="date-select">Date de circulation</label>
-          <input type="date" id="date-select" />
+        <div class="form">
+          <div class="field">
+            <label for="origin-select">Gare de départ</label>
+            <div class="control">
+              <select id="origin-select">
+                <option value="">— Sélectionnez une gare —</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="destination-select">Gare d’arrivée</label>
+            <div class="control">
+              <select id="destination-select">
+                <option value="">— Sélectionnez une gare —</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field field--full">
+            <div class="label-row">
+              <label for="date-select">Date de départ souhaitée</label>
+              <span class="help" title="La prédiction dépend du nombre de jours avant le départ.">?</span>
+            </div>
+            <div class="control">
+              <input type="date" id="date-select" />
+            </div>
+          </div>
+
+          <p class="form__hint">
+            MaxCast utilise la distribution historique de disponibilité TGVmax en fonction du nombre de jours avant le départ.
+            Quand c’est possible, la prévision est spécifique à ton trajet (origine/destination) ; sinon, elle retombe sur une
+            statistique plus globale. Si les données le permettent, l’état réel du trajet dans le snapshot d’aujourd’hui est
+            aussi pris en compte.
+          </p>
+
+          <button id="compute-btn" class="btn">
+            <span class="btn__icon">🔮</span>
+            <span>Lancer la prévision</span>
+          </button>
         </div>
-
-        <div class="form-group">
-          <label for="origin-select">Gare de départ</label>
-          <select id="origin-select">
-            <option value="">Sélectionner une origine…</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="destination-select">Gare d'arrivée</label>
-          <select id="destination-select">
-            <option value="">Sélectionner une destination…</option>
-          </select>
-        </div>
-
-        <button id="compute-btn" class="primary-btn">
-          Calculer la probabilité
-        </button>
-
-        <p class="hint">
-          Les gares proposées viennent de <code>stations.json</code>.<br />
-          La probabilité affichée combine :
-          <strong>proba par trajet</strong> (<code>proba_od.csv</code>) quand dispo,
-          sinon <strong>proba globale</strong> (<code>proba_global.csv</code>).
-        </p>
       </section>
 
-      <!-- Colonne droite : résultats -->
-      <section class="card result-card">
-        <h2>Résultat</h2>
+      <!-- RESULTS -->
+      <section class="panel">
+        <div class="results__header">
+          <h2 class="panel__title">Résultat</h2>
 
-        <!-- Bandeau "dispo aujourd'hui" -->
-        <div id="today-badge" class="today-badge today-badge--unknown">
-          Snapshot du jour : statut inconnu
-        </div>
-
-        <!-- Statut textuel -->
-        <div id="result-status" class="result-status result-status--neutral">
-          En attente d'un trajet…
-        </div>
-
-        <div class="result-grid">
-          <div class="result-item">
-            <span class="result-label">Probabilité d'ouverture (trajet)</span>
-            <span id="probability-value" class="result-value">–</span>
-          </div>
-
-          <div class="result-item">
-            <span class="result-label">Probabilité globale (fallback)</span>
-            <span id="probability-global-value" class="result-value">–</span>
-          </div>
-
-          <div class="result-item">
-            <span class="result-label">Delta jours (date - aujourd'hui)</span>
-            <span id="delta-value" class="result-value">–</span>
+          <!-- bandeau "dispo / pas dispo" -->
+          <div id="today-badge" class="badge badge--unknown">
+            Snapshot du jour : statut inconnu
           </div>
         </div>
 
-        <div id="warning-box" class="warning-box hidden"></div>
-
-        <!-- Courbe de probabilité pour le trajet -->
-        <div class="chart-container">
-          <canvas id="prob-chart"></canvas>
+        <!-- statut textuel -->
+        <div id="result-status" class="status status--neutral">
+          En attente d’un trajet…
         </div>
 
-        <div id="debug-info" class="debug-info hidden"></div>
+        <!-- KPIs -->
+        <div class="kpis">
+          <div class="kpi">
+            <div class="kpi__label">Probabilité trajet</div>
+            <div id="probability-value" class="kpi__value">—</div>
+          </div>
+
+          <div class="kpi">
+            <div class="kpi__label">Probabilité globale (fallback)</div>
+            <div id="probability-global-value" class="kpi__value">—</div>
+          </div>
+
+          <div class="kpi">
+            <div class="kpi__label">Delta jours (date − aujourd’hui)</div>
+            <div id="delta-value" class="kpi__value">—</div>
+          </div>
+        </div>
+
+        <div id="warning-box" class="callout callout--warn hidden"></div>
+
+        <!-- chart -->
+        <div class="chart">
+          <div class="chart__title">Courbe de probabilité (trajet)</div>
+          <div class="chart__box">
+            <canvas id="prob-chart"></canvas>
+          </div>
+        </div>
+
+        <div id="debug-info" class="debug hidden"></div>
       </section>
 
-      <!-- Bloc explications -->
-      <section class="card info-card">
-        <h2>Comment ça marche ?</h2>
-        <ul>
-          <li>
-            <strong>Proba par trajet</strong> :
-            extraite de <code>proba_od.csv</code> pour l’OD choisi
-            (on prend le <code>delta_days</code> le plus proche de la date sélectionnée).
-          </li>
-          <li>
-            <strong>Proba globale</strong> :
-            issue de <code>proba_global.csv</code> si jamais l’OD n’a pas de données.
-          </li>
-          <li>
-            <strong>Courbe</strong> :
-            série de probas de l’OD en fonction de <code>delta_days</code>.
-          </li>
-          <li>
-            <strong>Bandeau “dispo aujourd'hui”</strong> :
-            construit à partir de <code>snapshot_today_od.csv</code> (OD ouvert ou non à la date du snapshot).
-          </li>
+      <!-- EXPLAIN -->
+      <section class="panel panel--soft">
+        <h2 class="panel__title">Comment lire cette estimation ?</h2>
+        <ul class="bullets">
+          <li><strong>Probabilité trajet</strong> : tirée de <code>proba_od.csv</code> si la série existe pour cet OD.</li>
+          <li><strong>Fallback global</strong> : si l’OD n’a pas de données, on retombe sur <code>proba_global.csv</code>.</li>
+          <li><strong>Courbe</strong> : la probabilité de l’OD en fonction de <code>delta_days</code>.</li>
+          <li><strong>Snapshot du jour</strong> : le badge indique si le trajet est visible “dispo” aujourd’hui.</li>
         </ul>
       </section>
     </main>
 
-    <footer class="app-footer">
-      <span>
-        Front statique GitHub Pages – données et calculs sur
-        <code>matteotoutain/ECM_2526_FinalProject</code>.
-      </span>
-      <span class="footer-right">
-        Fichiers utilisés :
-        <code>metadata.json</code>, <code>proba_global.csv</code>,
-        <code>proba_od.csv</code>, <code>stations.json</code>,
-        <code>snapshot_today_od.csv</code>
-      </span>
+    <footer class="footer">
+      <span>Made with ❤️ in Centrale Méditerranée</span>
     </footer>
   </div>
 
