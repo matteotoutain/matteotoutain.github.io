@@ -1,37 +1,77 @@
 // app.js
-// Front GitHub Pages : lit les fichiers pré-calculés d'un AUTRE dépôt.
-//
-const URL_METADATA = "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/metadata.json";
-const URL_PROBA_GLOBAL = "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/proba_global.csv";
-const URL_STATIONS = "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/stations.json";
 
-// Colonnes de proba_global.csv
-const COL_DELTA_DAYS = "delta_days";
-const COL_PROBA_OPEN = "proba_open";
+// ===== 1. URLs backend (ton dépôt existant) ================================
 
-// Données en mémoire
-let globalRows = []; // [{ delta_days: number, proba_open: number }]
+const URL_METADATA =
+  "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/metadata.json";
+const URL_PROBA_GLOBAL =
+  "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/proba_global.csv";
+const URL_STATIONS =
+  "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/stations.json";
+
+// ➕ nouveaux fichiers à générer côté backend
+const URL_PROBA_OD =
+  "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/proba_od.csv";
+const URL_SNAPSHOT_TODAY_OD =
+  "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/snapshot_today_od.csv";
+
+// ===== 2. Schéma attendu ================================================
+
+// proba_global.csv
+const COL_DELTA_GLOBAL = "delta_days";
+const COL_PROBA_GLOBAL = "proba_open";
+
+// proba_od.csv
+const COL_OD_ORIGIN = "origin";
+const COL_OD_DEST = "destination";
+const COL_OD_DELTA = "delta_days";
+const COL_OD_PROBA = "proba_open";
+
+// snapshot_today_od.csv
+const COL_SNAP_ORIGIN = "origin";
+const COL_SNAP_DEST = "destination";
+const COL_SNAP_OPEN = "is_open_today";
+
+// ===== 3. Données en mémoire ============================================
+
 let metaData = null;
 let stations = [];
 
-// Helpers DOM
+let globalRows = []; // [{ delta_days, proba_open }]
+let odByKey = {};    // { "ORIGIN||DEST": [{delta_days, proba_open}, ...] }
+let snapshotToday = {}; // { "ORIGIN||DEST": bool }
+
+let chartInstance = null;
+
+// ===== Helpers DOM =======================================================
+
 function $(id) {
   return document.getElementById(id);
 }
 
-// =========================================================
-// 1. Chargement global (metadata + proba_global + stations)
-// =========================================================
+function odKey(origin, destination) {
+  return `${origin}||${destination}`;
+}
+
+// ===== 4. Chargement initial ============================================
 
 async function loadAll() {
   try {
-    const [metaRes, probaRes, stationsRes] = await Promise.all([
+    const [
+      metaRes,
+      globalRes,
+      stationsRes,
+      odRes,
+      snapRes
+    ] = await Promise.all([
       fetch(URL_METADATA),
       fetch(URL_PROBA_GLOBAL),
-      fetch(URL_STATIONS)
+      fetch(URL_STATIONS),
+      fetch(URL_PROBA_OD),
+      fetch(URL_SNAPSHOT_TODAY_OD)
     ]);
 
-    // ----- metadata.json -----
+    // metadata.json
     if (metaRes.ok) {
       metaData = await metaRes.json();
       updateMetadataLine();
@@ -39,50 +79,68 @@ async function loadAll() {
       $("meta-line").textContent = "Métadonnées non disponibles.";
     }
 
-    // ----- proba_global.csv -----
-    if (!probaRes.ok) {
-      throw new Error("Impossible de charger proba_global.csv (" + probaRes.status + ")");
+    // proba_global.csv
+    if (!globalRes.ok) {
+      throw new Error("Impossible de charger proba_global.csv");
     }
-    const csvText = await probaRes.text();
-    const rawRows = parseCSV(csvText);
-    globalRows = rawRows
-      .map(normalizeGlobalRow)
-      .filter((r) => Number.isFinite(r.delta_days) && Number.isFinite(r.proba_open));
+    const globalText = await globalRes.text();
+    const globalRaw = parseCSV(globalText);
+    globalRows = globalRaw
+      .map((r) => ({
+        delta_days: parseInt(r[COL_DELTA_GLOBAL] || "NaN", 10),
+        proba_open: parseFloat(r[COL_PROBA_GLOBAL] || "NaN")
+      }))
+      .filter(
+        (r) =>
+          Number.isFinite(r.delta_days) && Number.isFinite(r.proba_open)
+      )
+      .sort((a, b) => a.delta_days - b.delta_days);
 
-    if (!globalRows.length) {
-      throw new Error("proba_global.csv ne contient aucune ligne exploitable.");
-    }
-
-    // Tri par delta_days pour faciliter les recherches
-    globalRows.sort((a, b) => a.delta_days - b.delta_days);
-
-    // ----- stations.json -----
+    // stations.json
     if (stationsRes.ok) {
       stations = await stationsRes.json();
       populateStations();
     } else {
-      console.warn("stations.json non disponible :", stationsRes.status);
+      console.warn("stations.json non disponible");
+    }
+
+    // proba_od.csv
+    if (odRes.ok) {
+      const odText = await odRes.text();
+      const odRaw = parseCSV(odText);
+      buildOdIndex(odRaw);
+    } else {
+      console.warn("proba_od.csv non disponible => seulement proba globale.");
+    }
+
+    // snapshot_today_od.csv
+    if (snapRes.ok) {
+      const snapText = await snapRes.text();
+      const snapRaw = parseCSV(snapText);
+      buildSnapshotIndex(snapRaw);
+    } else {
+      console.warn(
+        "snapshot_today_od.csv non disponible => bandeau 'dispo' restera 'inconnu'."
+      );
     }
 
     prefillDateToday();
-    setStatus("Données chargées, sélectionne un trajet.", "neutral");
     updateRangeInfo();
-  } catch (err) {
-    console.error("Erreur lors du chargement des données :", err);
+    setStatus("Données chargées, sélectionne un trajet.", "neutral");
+  } catch (e) {
+    console.error(e);
     showFatalError(
-      "Impossible de charger les données distantes. Vérifie les URL des fichiers dans app.js."
+      "Erreur de chargement des données. Vérifie les fichiers pré-calculés."
     );
   }
 }
 
-// Affiche la ligne de métadonnées (volumes uniquement)
 function updateMetadataLine() {
   const el = $("meta-line");
   if (!metaData) {
     el.textContent = "Métadonnées non disponibles.";
     return;
   }
-
   const genAt = metaData.generated_at_utc || "n.c.";
   const nRaw = metaData.n_rows_raw || "n.c.";
   const nEnriched = metaData.n_rows_enriched || "n.c.";
@@ -91,30 +149,27 @@ function updateMetadataLine() {
   const nOd = metaData.n_rows_proba_od || "n.c.";
 
   el.textContent =
-    `Généré le ${genAt} • ${nRaw} lignes brutes • ${nEnriched} lignes enrichies • ` +
-    `${nStations} gares • ${nGlobal} lignes globales • ${nOd} OD détaillés`;
+    `Généré le ${genAt} • ${nRaw} lignes brutes • ${nEnriched} enrichies • ` +
+    `${nStations} gares • ${nGlobal} globales • ${nOd} OD`;
 }
 
-// =========================================================
-// 2. Parsing CSV (simple, séparateur auto ; ou , )
-// =========================================================
+// ===== 5. Parsing CSV simple ============================================
 
 function parseCSV(text) {
   const trimmed = text.trim();
   if (!trimmed) return [];
-
   const lines = trimmed.split(/\r?\n/);
   if (lines.length <= 1) return [];
 
   const headerLine = lines[0];
-  const sep = headerLine.split(";").length > headerLine.split(",").length ? ";" : ",";
+  const sep =
+    headerLine.split(";").length > headerLine.split(",").length ? ";" : ",";
   const headers = headerLine.split(sep).map((h) => h.trim());
 
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-
     const cols = line.split(sep);
     const obj = {};
     headers.forEach((h, idx) => {
@@ -125,41 +180,70 @@ function parseCSV(text) {
   return rows;
 }
 
-// Normalisation d'une ligne de proba_global.csv
-function normalizeGlobalRow(raw) {
-  return {
-    delta_days: parseInt(raw[COL_DELTA_DAYS] || "NaN", 10),
-    proba_open: parseFloat(raw[COL_PROBA_OPEN] || "NaN")
-  };
+// ===== 6. Indexation OD & snapshot ======================================
+
+function buildOdIndex(odRaw) {
+  odByKey = {};
+  odRaw.forEach((r) => {
+    const o = r[COL_OD_ORIGIN];
+    const d = r[COL_OD_DEST];
+    if (!o || !d) return;
+    const key = odKey(o, d);
+    const delta = parseInt(r[COL_OD_DELTA] || "NaN", 10);
+    const p = parseFloat(r[COL_OD_PROBA] || "NaN");
+    if (!Number.isFinite(delta) || !Number.isFinite(p)) return;
+    if (!odByKey[key]) odByKey[key] = [];
+    odByKey[key].push({ delta_days: delta, proba_open: p });
+  });
+
+  // Trier chaque série par delta_days
+  for (const key of Object.keys(odByKey)) {
+    odByKey[key].sort((a, b) => a.delta_days - b.delta_days);
+  }
 }
 
-// =========================================================
-// 3. Stations : remplissage des selects
-// =========================================================
+function buildSnapshotIndex(snapRaw) {
+  snapshotToday = {};
+  snapRaw.forEach((r) => {
+    const o = r[COL_SNAP_ORIGIN];
+    const d = r[COL_SNAP_DEST];
+    if (!o || !d) return;
+    const key = odKey(o, d);
+    const rawVal = (r[COL_SNAP_OPEN] || "").toString().toLowerCase();
+    const val =
+      rawVal === "1" ||
+      rawVal === "true" ||
+      rawVal === "oui" ||
+      rawVal === "yes";
+    snapshotToday[key] = val;
+  });
+}
+
+// ===== 7. Stations & date ===============================================
 
 function populateStations() {
   const originSelect = $("origin-select");
   const destSelect = $("destination-select");
-
-  originSelect.innerHTML = '<option value="">Sélectionner une origine…</option>';
-  destSelect.innerHTML = '<option value="">Sélectionner une destination…</option>';
+  originSelect.innerHTML =
+    '<option value="">Sélectionner une origine…</option>';
+  destSelect.innerHTML =
+    '<option value="">Sélectionner une destination…</option>';
 
   if (!Array.isArray(stations) || !stations.length) return;
 
   stations.forEach((name) => {
-    const opt1 = document.createElement("option");
-    opt1.value = name;
-    opt1.textContent = name;
-    originSelect.appendChild(opt1);
+    const o = document.createElement("option");
+    o.value = name;
+    o.textContent = name;
+    originSelect.appendChild(o);
 
-    const opt2 = document.createElement("option");
-    opt2.value = name;
-    opt2.textContent = name;
-    destSelect.appendChild(opt2);
+    const d = document.createElement("option");
+    d.value = name;
+    d.textContent = name;
+    destSelect.appendChild(d);
   });
 }
 
-// Date par défaut = aujourd'hui
 function prefillDateToday() {
   const today = new Date();
   const yyyy = today.getFullYear();
@@ -168,107 +252,35 @@ function prefillDateToday() {
   $("date-select").value = `${yyyy}-${mm}-${dd}`;
 }
 
-// Affiche l'intervalle de delta_days couvert par le modèle
 function updateRangeInfo() {
   if (!globalRows.length) {
-    $("range-value").textContent = "–";
+    $("range-value") && ($("range-value").textContent = "–");
     return;
   }
   const minDelta = globalRows[0].delta_days;
   const maxDelta = globalRows[globalRows.length - 1].delta_days;
-  $("range-value").textContent = `${minDelta} → ${maxDelta}`;
+  const el = $("range-value");
+  if (el) el.textContent = `${minDelta} → ${maxDelta}`;
 }
 
-// =========================================================
-// 4. Calcul de la proba pour une date choisie
-// =========================================================
+// ===== 8. Calcul & affichage ============================================
 
-function onComputeClick() {
-  const dateStr = $("date-select").value;
-  const origin = $("origin-select").value;
-  const destination = $("destination-select").value;
-
-  resetMessages();
-
-  if (!dateStr) {
-    setStatus("Merci de sélectionner une date.", "warning");
-    return;
-  }
-
-  if (!origin || !destination) {
-    setStatus("Sélectionne aussi une origine et une destination.", "warning");
-    // On ne bloque pas forcément le calcul de la proba globale,
-    // mais on demande quand même un trajet complet pour l’UX.
-  }
-
-  const delta = computeDeltaDaysFromToday(dateStr);
-  $("delta-value").textContent = String(delta);
-
-  if (!globalRows.length) {
-    showFatalError("Les données globales ne sont pas disponibles.");
-    return;
-  }
-
-  const minDelta = globalRows[0].delta_days;
-  const maxDelta = globalRows[globalRows.length - 1].delta_days;
-
-  let warningHtml = "";
-  if (delta < minDelta || delta > maxDelta) {
-    warningHtml +=
-      `La date choisie (delta = ${delta}) est <strong>hors de la plage</strong> couverte par le modèle ` +
-      `(<code>${minDelta}</code> → <code>${maxDelta}</code>). ` +
-      "La valeur affichée est extrapolée à partir du delta le plus proche.";
-  }
-
-  // Cherche la ligne de delta_days la plus proche
-  const row = findClosestDeltaRow(delta);
-  if (!row) {
-    showFatalError("Impossible de trouver une probabilité globale pour ce delta.");
-    return;
-  }
-
-  updateGlobalResult(row, delta);
-
-  if (warningHtml) {
-    showWarning(warningHtml);
-  }
-
-  // Debug soft
-  const dbg = $("debug-info");
-  dbg.innerHTML =
-    "<strong>Debug :</strong> " +
-    JSON.stringify(
-      {
-        date_selectionnee: dateStr,
-        delta_calcule: delta,
-        delta_retourne: row.delta_days,
-        proba_open: row.proba_open
-      },
-      null,
-      2
-    )
-      .replace(/\n/g, "<br>")
-      .replace(/ /g, "&nbsp;");
-  dbg.classList.remove("hidden");
-}
-
-// Conversion date → delta_days (date - aujourd'hui)
 function computeDeltaDaysFromToday(dateStr) {
-  // dateStr = "YYYY-MM-DD"
   const travel = new Date(dateStr + "T00:00:00");
   const today = new Date();
-  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const todayMidnight = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
   const diffMs = travel.getTime() - todayMidnight.getTime();
-  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-  return diffDays;
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
 }
 
-// Trouve la ligne avec le delta_days le plus proche
-function findClosestDeltaRow(delta) {
+function findClosestGlobal(delta) {
   if (!globalRows.length) return null;
   let best = globalRows[0];
   let bestDist = Math.abs(best.delta_days - delta);
-
   for (let i = 1; i < globalRows.length; i++) {
     const r = globalRows[i];
     const dist = Math.abs(r.delta_days - delta);
@@ -280,48 +292,219 @@ function findClosestDeltaRow(delta) {
   return best;
 }
 
-// Mise à jour de la carte résultat
-function updateGlobalResult(row, requestedDelta) {
-  const prob = Number.isFinite(row.proba_open) ? row.proba_open : null;
+function findClosestOdRow(series, delta) {
+  if (!series || !series.length) return null;
+  let best = series[0];
+  let bestDist = Math.abs(best.delta_days - delta);
+  for (let i = 1; i < series.length; i++) {
+    const r = series[i];
+    const dist = Math.abs(r.delta_days - delta);
+    if (dist < bestDist) {
+      best = r;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
 
-  $("probability-value").textContent =
-    prob == null ? "–" : (prob * 100).toFixed(0) + " %";
+function onComputeClick() {
+  const dateStr = $("date-select").value;
+  const origin = $("origin-select").value;
+  const dest = $("destination-select").value;
 
-  if (prob == null) {
+  resetMessages();
+
+  if (!dateStr || !origin || !dest) {
     setStatus(
-      "Pas assez de données fiables pour estimer cette probabilité globale.",
+      "Merci de sélectionner une date, une origine et une destination.",
       "warning"
     );
     return;
   }
 
-  // Statut visuel simple suivant la proba
-  if (prob >= 0.7) {
+  const key = odKey(origin, dest);
+  const delta = computeDeltaDaysFromToday(dateStr);
+  $("delta-value").textContent = String(delta);
+
+  // 1) snapshot du jour
+  updateTodayBadge(key);
+
+  // 2) proba globale (fallback)
+  const globalRow = findClosestGlobal(delta);
+  const globalProb = globalRow ? globalRow.proba_open : null;
+  $("probability-global-value").textContent =
+    globalProb == null ? "–" : (globalProb * 100).toFixed(0) + " %";
+
+  // 3) proba OD
+  const series = odByKey[key] || [];
+  const odRow = findClosestOdRow(series, delta);
+  const odProb = odRow ? odRow.proba_open : null;
+
+  if (odProb == null) {
+    // Pas de données OD => on montre la globale + warning
+    $("probability-value").textContent = "–";
     setStatus(
-      "Probabilité globale élevée d'ouverture TGVmax pour ce delta.",
-      "positive"
+      "Pas de données spécifiques pour ce trajet. Affichage de la probabilité globale.",
+      "warning"
     );
-  } else if (prob <= 0.3) {
-    setStatus(
-      "Probabilité globale faible d'ouverture TGVmax pour ce delta.",
-      "negative"
-    );
+    if (globalProb != null && globalProb >= 0.7) {
+      addStatusHint("Trajet probablement souvent ouvert, mais sans historique OD dédié.");
+    }
+    drawChart(series, key); // sera vide
   } else {
-    setStatus(
-      "Probabilité globale intermédiaire : ouverture incertaine.",
-      "neutral"
-    );
+    $("probability-value").textContent =
+      (odProb * 100).toFixed(0) + " %";
+
+    // Statut selon OD
+    if (odProb >= 0.7) {
+      setStatus(
+        "Fortes chances d'ouverture TGVmax pour ce trajet.",
+        "positive"
+      );
+    } else if (odProb <= 0.3) {
+      setStatus(
+        "Faibles chances d'ouverture TGVmax pour ce trajet.",
+        "negative"
+      );
+    } else {
+      setStatus("Zone grise : ouverture TGVmax incertaine.", "neutral");
+    }
+
+    // Si delta en dehors de la plage observée de la série OD, avertir
+    if (series.length) {
+      const minD = series[0].delta_days;
+      const maxD = series[series.length - 1].delta_days;
+      if (delta < minD || delta > maxD) {
+        showWarning(
+          `Delta ${delta} hors de la plage observée pour ce trajet (${minD} → ${maxD}). ` +
+            "La proba OD est basée sur le delta le plus proche."
+        );
+      }
+    }
+    drawChart(series, key);
+  }
+
+  // Debug
+  const dbg = $("debug-info");
+  dbg.innerHTML =
+    "<strong>Debug :</strong> " +
+    JSON.stringify(
+      {
+        origin,
+        destination: dest,
+        key,
+        delta,
+        global_used: globalRow,
+        od_used: odRow,
+        has_series: series.length
+      },
+      null,
+      2
+    )
+      .replace(/\n/g, "<br>")
+      .replace(/ /g, "&nbsp;");
+  dbg.classList.remove("hidden");
+}
+
+// ===== 9. Bandeau "dispo aujourd'hui" ===================================
+
+function updateTodayBadge(key) {
+  const badge = $("today-badge");
+  const val = snapshotToday[key];
+  if (val === undefined) {
+    badge.textContent = "Snapshot du jour : statut inconnu pour ce trajet";
+    badge.className = "today-badge today-badge--unknown";
+    return;
+  }
+  if (val) {
+    badge.textContent = "Snapshot du jour : TGVmax DISPONIBLE sur ce trajet";
+    badge.className = "today-badge today-badge--open";
+  } else {
+    badge.textContent = "Snapshot du jour : TGVmax NON disponible sur ce trajet";
+    badge.className = "today-badge today-badge--closed";
   }
 }
 
-// =========================================================
-// 5. Gestion des messages / erreurs
-// =========================================================
+// ===== 10. Courbe de probabilité (Chart.js) =============================
 
-function showFatalError(message) {
-  $("result-status").textContent = message;
+function drawChart(series, key) {
+  const ctx = document.getElementById("prob-chart").getContext("2d");
+
+  if (chartInstance) {
+    chartInstance.destroy();
+    chartInstance = null;
+  }
+
+  if (!series || !series.length) {
+    chartInstance = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: "Pas de données OD pour ce trajet",
+            data: []
+          }
+        ]
+      },
+      options: {
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { title: { display: true, text: "delta_days" } },
+          y: {
+            title: { display: true, text: "proba_open" },
+            min: 0,
+            max: 1
+          }
+        }
+      }
+    });
+    return;
+  }
+
+  const labels = series.map((r) => r.delta_days);
+  const data = series.map((r) => r.proba_open);
+
+  chartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: `Proba d'ouverture TGVmax – ${key.replace("||", " → ")}`,
+          data,
+          tension: 0.2,
+          pointRadius: 2
+        }
+      ]
+    },
+    options: {
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: "delta_days" }
+        },
+        y: {
+          title: { display: true, text: "proba_open" },
+          min: 0,
+          max: 1
+        }
+      }
+    }
+  });
+}
+
+// ===== 11. Messages / erreurs ===========================================
+
+function showFatalError(msg) {
+  $("result-status").textContent = msg;
   $("result-status").className = "result-status result-status--negative";
   $("probability-value").textContent = "–";
+  $("probability-global-value").textContent = "–";
   $("delta-value").textContent = "–";
 }
 
@@ -338,7 +521,6 @@ function resetMessages() {
 function setStatus(text, level) {
   const el = $("result-status");
   el.textContent = text;
-
   const base = "result-status";
   let cls;
   switch (level) {
@@ -363,13 +545,19 @@ function showWarning(html) {
   w.classList.remove("hidden");
 }
 
-// =========================================================
-// 6. Listeners
-// =========================================================
+function addStatusHint(text) {
+  const w = $("warning-box");
+  if (w.classList.contains("hidden")) {
+    w.innerHTML = text;
+    w.classList.remove("hidden");
+  } else {
+    w.innerHTML += "<br>" + text;
+  }
+}
+
+// ===== 12. Listeners =====================================================
 
 document.addEventListener("DOMContentLoaded", () => {
   loadAll();
-  $("compute-btn").addEventListener("click", () => {
-    onComputeClick();
-  });
+  $("compute-btn").addEventListener("click", onComputeClick);
 });
