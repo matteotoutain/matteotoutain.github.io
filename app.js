@@ -28,6 +28,7 @@ const COL_OD_DELTA = "delta_days";
 const COL_OD_PROBA = "proba_open";
 
 // snapshot_today_od.csv
+const COL_SNAP_DATE = "departure_date"; // IMPORTANT
 const COL_SNAP_ORIGIN = "origin";
 const COL_SNAP_DEST = "destination";
 const COL_SNAP_OPEN = "is_open_today";
@@ -39,7 +40,8 @@ let stations = [];
 
 let globalRows = []; // [{ delta_days, proba_open }]
 let odByKey = {};    // { "ORIGIN||DEST": [{delta_days, proba_open}, ...] }
-let snapshotToday = {}; // { "ORIGIN||DEST": bool }
+// snapshotToday = { "YYYY-MM-DD": { "ORIGIN||DEST": bool } }
+let snapshotToday = {};
 
 let chartInstance = null;
 
@@ -49,8 +51,22 @@ function $(id) {
   return document.getElementById(id);
 }
 
+// Normalisation robuste (évite mismatch espaces/unicode)
+function normText(s) {
+  return (s ?? "")
+    .toString()
+    .normalize("NFKC")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normStation(s) {
+  // Si tu veux forcer en MAJ : return normText(s).toUpperCase();
+  return normText(s);
+}
+
 function odKey(origin, destination) {
-  return `${origin}||${destination}`;
+  return `${normStation(origin)}||${normStation(destination)}`;
 }
 
 // ===== 4. Chargement initial ============================================
@@ -188,10 +204,12 @@ function buildOdIndex(odRaw) {
     const o = r[COL_OD_ORIGIN];
     const d = r[COL_OD_DEST];
     if (!o || !d) return;
+
     const key = odKey(o, d);
     const delta = parseInt(r[COL_OD_DELTA] || "NaN", 10);
     const p = parseFloat(r[COL_OD_PROBA] || "NaN");
     if (!Number.isFinite(delta) || !Number.isFinite(p)) return;
+
     if (!odByKey[key]) odByKey[key] = [];
     odByKey[key].push({ delta_days: delta, proba_open: p });
   });
@@ -203,19 +221,26 @@ function buildOdIndex(odRaw) {
 }
 
 function buildSnapshotIndex(snapRaw) {
+  // snapshotToday = { "YYYY-MM-DD": { "ORIG||DEST": bool } }
   snapshotToday = {};
+
   snapRaw.forEach((r) => {
+    const dep = normText(r[COL_SNAP_DATE]); // IMPORTANT
     const o = r[COL_SNAP_ORIGIN];
     const d = r[COL_SNAP_DEST];
-    if (!o || !d) return;
+    if (!dep || !o || !d) return;
+
     const key = odKey(o, d);
-    const rawVal = (r[COL_SNAP_OPEN] || "").toString().toLowerCase();
+
+    const rawVal = (r[COL_SNAP_OPEN] ?? "").toString().toLowerCase().trim();
     const val =
       rawVal === "1" ||
       rawVal === "true" ||
       rawVal === "oui" ||
       rawVal === "yes";
-    snapshotToday[key] = val;
+
+    if (!snapshotToday[dep]) snapshotToday[dep] = {};
+    snapshotToday[dep][key] = val;
   });
 }
 
@@ -225,20 +250,22 @@ function populateStations() {
   const originSelect = $("origin-select");
   const destSelect = $("destination-select");
   originSelect.innerHTML =
-    '<option value="">Sélectionner une origine…</option>';
+    '<option value="">— Sélectionnez une gare —</option>';
   destSelect.innerHTML =
-    '<option value="">Sélectionner une destination…</option>';
+    '<option value="">— Sélectionnez une gare —</option>';
 
   if (!Array.isArray(stations) || !stations.length) return;
 
   stations.forEach((name) => {
+    const v = normStation(name);
+
     const o = document.createElement("option");
-    o.value = name;
+    o.value = v;
     o.textContent = name;
     originSelect.appendChild(o);
 
     const d = document.createElement("option");
-    d.value = name;
+    d.value = v;
     d.textContent = name;
     destSelect.appendChild(d);
   });
@@ -253,14 +280,13 @@ function prefillDateToday() {
 }
 
 function updateRangeInfo() {
-  if (!globalRows.length) {
-    $("range-value") && ($("range-value").textContent = "–");
-    return;
-  }
+  if (!globalRows.length) return;
+  // (tu peux supprimer si tu n'affiches plus range-value)
+  const el = $("range-value");
+  if (!el) return;
   const minDelta = globalRows[0].delta_days;
   const maxDelta = globalRows[globalRows.length - 1].delta_days;
-  const el = $("range-value");
-  if (el) el.textContent = `${minDelta} → ${maxDelta}`;
+  el.textContent = `${minDelta} → ${maxDelta}`;
 }
 
 // ===== 8. Calcul & affichage ============================================
@@ -326,8 +352,8 @@ function onComputeClick() {
   const delta = computeDeltaDaysFromToday(dateStr);
   $("delta-value").textContent = String(delta);
 
-  // 1) snapshot du jour
-  updateTodayBadge(key);
+  // 1) snapshot du jour (INDEXÉ PAR DATE + OD)
+  updateTodayBadge(dateStr, origin, dest);
 
   // 2) proba globale (fallback)
   const globalRow = findClosestGlobal(delta);
@@ -341,7 +367,6 @@ function onComputeClick() {
   const odProb = odRow ? odRow.proba_open : null;
 
   if (odProb == null) {
-    // Pas de données OD => on montre la globale + warning
     $("probability-value").textContent = "–";
     setStatus(
       "Pas de données spécifiques pour ce trajet. Affichage de la probabilité globale.",
@@ -350,34 +375,25 @@ function onComputeClick() {
     if (globalProb != null && globalProb >= 0.7) {
       addStatusHint("Trajet probablement souvent ouvert, mais sans historique OD dédié.");
     }
-    drawChart(series, key); // sera vide
+    drawChart(series, key);
   } else {
-    $("probability-value").textContent =
-      (odProb * 100).toFixed(0) + " %";
+    $("probability-value").textContent = (odProb * 100).toFixed(0) + " %";
 
-    // Statut selon OD
     if (odProb >= 0.7) {
-      setStatus(
-        "Fortes chances d'ouverture TGVmax pour ce trajet.",
-        "positive"
-      );
+      setStatus("Fortes chances d'ouverture TGVmax pour ce trajet.", "positive");
     } else if (odProb <= 0.3) {
-      setStatus(
-        "Faibles chances d'ouverture TGVmax pour ce trajet.",
-        "negative"
-      );
+      setStatus("Faibles chances d'ouverture TGVmax pour ce trajet.", "negative");
     } else {
       setStatus("Zone grise : ouverture TGVmax incertaine.", "neutral");
     }
 
-    // Si delta en dehors de la plage observée de la série OD, avertir
     if (series.length) {
       const minD = series[0].delta_days;
       const maxD = series[series.length - 1].delta_days;
       if (delta < minD || delta > maxD) {
         showWarning(
           `Delta ${delta} hors de la plage observée pour ce trajet (${minD} → ${maxD}). ` +
-            "La proba OD est basée sur le delta le plus proche."
+          "La proba OD est basée sur le delta le plus proche."
         );
       }
     }
@@ -386,49 +402,63 @@ function onComputeClick() {
 
   // Debug
   const dbg = $("debug-info");
-  dbg.innerHTML =
-    "<strong>Debug :</strong> " +
-    JSON.stringify(
+  if (dbg) {
+    dbg.classList.remove("hidden");
+    dbg.textContent = JSON.stringify(
       {
-        origin,
-        destination: dest,
+        departure_date: normText(dateStr),
+        origin: normStation(origin),
+        destination: normStation(dest),
         key,
         delta,
+        snapshot_lookup: snapshotToday?.[normText(dateStr)]?.[key],
         global_used: globalRow,
         od_used: odRow,
         has_series: series.length
       },
       null,
       2
-    )
-      .replace(/\n/g, "<br>")
-      .replace(/ /g, "&nbsp;");
-  dbg.classList.remove("hidden");
+    );
+  }
 }
 
 // ===== 9. Bandeau "dispo aujourd'hui" ===================================
 
-function updateTodayBadge(key) {
+function updateTodayBadge(departureDateStr, origin, dest) {
   const badge = $("today-badge");
-  const val = snapshotToday[key];
-  if (val === undefined) {
-    badge.textContent = "Snapshot du jour : statut inconnu pour ce trajet";
-    badge.className = "today-badge today-badge--unknown";
+
+  const dep = normText(departureDateStr);
+  const key = odKey(origin, dest);
+
+  const byDate = snapshotToday[dep];
+  if (!byDate) {
+    badge.textContent = `Snapshot du jour : aucun statut pour la date ${dep}`;
+    badge.className = "badge badge--unknown";
     return;
   }
+
+  const val = byDate[key];
+  if (val === undefined) {
+    badge.textContent = "Snapshot du jour : statut inconnu pour ce trajet";
+    badge.className = "badge badge--unknown";
+    return;
+  }
+
   if (val) {
     badge.textContent = "Snapshot du jour : TGVmax DISPONIBLE sur ce trajet";
-    badge.className = "today-badge today-badge--open";
+    badge.className = "badge badge--open";
   } else {
     badge.textContent = "Snapshot du jour : TGVmax NON disponible sur ce trajet";
-    badge.className = "today-badge today-badge--closed";
+    badge.className = "badge badge--closed";
   }
 }
 
 // ===== 10. Courbe de probabilité (Chart.js) =============================
 
 function drawChart(series, key) {
-  const ctx = document.getElementById("prob-chart").getContext("2d");
+  const canvas = document.getElementById("prob-chart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
 
   if (chartInstance) {
     chartInstance.destroy();
@@ -438,26 +468,12 @@ function drawChart(series, key) {
   if (!series || !series.length) {
     chartInstance = new Chart(ctx, {
       type: "line",
-      data: {
-        labels: [],
-        datasets: [
-          {
-            label: "Pas de données OD pour ce trajet",
-            data: []
-          }
-        ]
-      },
+      data: { labels: [], datasets: [{ label: "Pas de données OD", data: [] }] },
       options: {
-        plugins: {
-          legend: { display: false }
-        },
+        plugins: { legend: { display: false } },
         scales: {
           x: { title: { display: true, text: "delta_days" } },
-          y: {
-            title: { display: true, text: "proba_open" },
-            min: 0,
-            max: 1
-          }
+          y: { title: { display: true, text: "proba_open" }, min: 0, max: 1 }
         }
       }
     });
@@ -473,7 +489,7 @@ function drawChart(series, key) {
       labels,
       datasets: [
         {
-          label: `Proba d'ouverture TGVmax – ${key.replace("||", " → ")}`,
+          label: `Proba d'ouverture – ${key.replace("||", " → ")}`,
           data,
           tension: 0.2,
           pointRadius: 2
@@ -481,18 +497,10 @@ function drawChart(series, key) {
       ]
     },
     options: {
-      plugins: {
-        legend: { display: false }
-      },
+      plugins: { legend: { display: false } },
       scales: {
-        x: {
-          title: { display: true, text: "delta_days" }
-        },
-        y: {
-          title: { display: true, text: "proba_open" },
-          min: 0,
-          max: 1
-        }
+        x: { title: { display: true, text: "delta_days" } },
+        y: { title: { display: true, text: "proba_open" }, min: 0, max: 1 }
       }
     }
   });
@@ -502,7 +510,7 @@ function drawChart(series, key) {
 
 function showFatalError(msg) {
   $("result-status").textContent = msg;
-  $("result-status").className = "result-status result-status--negative";
+  $("result-status").className = "status status--negative";
   $("probability-value").textContent = "–";
   $("probability-global-value").textContent = "–";
   $("delta-value").textContent = "–";
@@ -511,42 +519,41 @@ function showFatalError(msg) {
 function resetMessages() {
   setStatus("Calcul en attente…", "neutral");
   const w = $("warning-box");
-  w.classList.add("hidden");
-  w.innerHTML = "";
+  if (w) {
+    w.classList.add("hidden");
+    w.innerHTML = "";
+  }
   const dbg = $("debug-info");
-  dbg.classList.add("hidden");
-  dbg.innerHTML = "";
+  if (dbg) {
+    dbg.classList.add("hidden");
+    dbg.textContent = "";
+  }
 }
 
 function setStatus(text, level) {
   const el = $("result-status");
+  if (!el) return;
+
   el.textContent = text;
-  const base = "result-status";
-  let cls;
-  switch (level) {
-    case "positive":
-      cls = base + " result-status--positive";
-      break;
-    case "negative":
-      cls = base + " result-status--negative";
-      break;
-    case "warning":
-      cls = base + " result-status--warning";
-      break;
-    default:
-      cls = base + " result-status--neutral";
-  }
+
+  // Compat : si tu utilises l'ancien CSS (result-status--*), change ici.
+  let cls = "status status--neutral";
+  if (level === "positive") cls = "status status--positive";
+  if (level === "negative") cls = "status status--negative";
+  if (level === "warning") cls = "status status--warning";
   el.className = cls;
 }
 
 function showWarning(html) {
   const w = $("warning-box");
+  if (!w) return;
   w.innerHTML = html;
   w.classList.remove("hidden");
 }
 
 function addStatusHint(text) {
   const w = $("warning-box");
+  if (!w) return;
   if (w.classList.contains("hidden")) {
     w.innerHTML = text;
     w.classList.remove("hidden");
