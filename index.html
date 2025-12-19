@@ -2,18 +2,19 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>TGVmax – Probabilité globale d'ouverture</title>
+  <title>TGVmax – Probabilité d'ouverture</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js pour la courbe de probabilité -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="app-container">
     <header class="app-header">
-      <h1>📈 TGVmax – Probabilité globale d'ouverture</h1>
+      <h1>📈 TGVmax – Probabilité d'ouverture</h1>
       <p class="subtitle">
-        Estimation de la probabilité <strong>globale</strong> d'ouverture TGVmax
-        en fonction du nombre de jours avant le départ, à partir des données
-        pré-calculées sur un autre dépôt GitHub.
+        Estimation de la probabilité d'ouverture TGVmax pour un trajet donné,
+        à partir des données pré-calculées du dépôt backend.
       </p>
       <p id="meta-line" class="subtitle" style="font-size:0.8rem; opacity:0.8;">
         Chargement des métadonnées…
@@ -45,13 +46,14 @@
         </div>
 
         <button id="compute-btn" class="primary-btn">
-          Calculer la probabilité globale
+          Calculer la probabilité
         </button>
 
         <p class="hint">
-          Les gares proposées viennent de <code>stations.json</code>.  
-          La probabilité affichée est <strong>globale</strong> : elle dépend du
-          nombre de jours avant le départ, pas de l’itinéraire.
+          Les gares proposées viennent de <code>stations.json</code>.<br />
+          La probabilité affichée combine :
+          <strong>proba par trajet</strong> (<code>proba_od.csv</code>) quand dispo,
+          sinon <strong>proba globale</strong> (<code>proba_global.csv</code>).
         </p>
       </section>
 
@@ -59,55 +61,63 @@
       <section class="card result-card">
         <h2>Résultat</h2>
 
+        <!-- Bandeau "dispo aujourd'hui" -->
+        <div id="today-badge" class="today-badge today-badge--unknown">
+          Snapshot du jour : statut inconnu
+        </div>
+
+        <!-- Statut textuel -->
         <div id="result-status" class="result-status result-status--neutral">
           En attente d'un trajet…
         </div>
 
         <div class="result-grid">
           <div class="result-item">
-            <span class="result-label">Probabilité globale d'ouverture</span>
+            <span class="result-label">Probabilité d'ouverture (trajet)</span>
             <span id="probability-value" class="result-value">–</span>
+          </div>
+
+          <div class="result-item">
+            <span class="result-label">Probabilité globale (fallback)</span>
+            <span id="probability-global-value" class="result-value">–</span>
           </div>
 
           <div class="result-item">
             <span class="result-label">Delta jours (date - aujourd'hui)</span>
             <span id="delta-value" class="result-value">–</span>
           </div>
-
-          <div class="result-item">
-            <span class="result-label">Delta couvert par le modèle</span>
-            <span id="range-value" class="result-value">–</span>
-          </div>
         </div>
 
         <div id="warning-box" class="warning-box hidden"></div>
+
+        <!-- Courbe de probabilité pour le trajet -->
+        <div class="chart-container">
+          <canvas id="prob-chart"></canvas>
+        </div>
+
         <div id="debug-info" class="debug-info hidden"></div>
       </section>
 
       <!-- Bloc explications -->
       <section class="card info-card">
-        <h2>Comment lire cette estimation ?</h2>
+        <h2>Comment ça marche ?</h2>
         <ul>
           <li>
-            <strong>Probabilité globale</strong> : issue de
-            <code>proba_global.csv</code>, pour un certain <code>delta_days</code>
-            (jours entre aujourd’hui et la date du train).
+            <strong>Proba par trajet</strong> :
+            extraite de <code>proba_od.csv</code> pour l’OD choisi
+            (on prend le <code>delta_days</code> le plus proche de la date sélectionnée).
           </li>
           <li>
-            <strong>Delta jours</strong> : si tu choisis une date à J+7, on regarde
-            la ligne <code>delta_days = 7</code>. S’il n’y en a pas, on prend
-            le <strong>delta le plus proche</strong> dans le fichier.
+            <strong>Proba globale</strong> :
+            issue de <code>proba_global.csv</code> si jamais l’OD n’a pas de données.
           </li>
           <li>
-            <strong>Saturation du modèle</strong> : si tu choisis une date
-            très loin (avant le min ou après le max couvert), un message te
-            prévient qu’on extrapole fortement.
+            <strong>Courbe</strong> :
+            série de probas de l’OD en fonction de <code>delta_days</code>.
           </li>
           <li>
-            <strong>Origine / Destination</strong> : gérées côté interface pour
-            coller à la version Streamlit, mais la proba globale ne dépend que
-            de <code>delta_days</code>. Les effets OD détaillés restent gérés
-            par le backend (fichier <code>proba_od.parquet</code>).
+            <strong>Bandeau “dispo aujourd'hui”</strong> :
+            construit à partir de <code>snapshot_today_od.csv</code> (OD ouvert ou non à la date du snapshot).
           </li>
         </ul>
       </section>
@@ -115,10 +125,14 @@
 
     <footer class="app-footer">
       <span>
-        Front statique GitHub Pages – données et calculs sur un dépôt backend.
+        Front statique GitHub Pages – données et calculs sur
+        <code>matteotoutain/ECM_2526_FinalProject</code>.
       </span>
       <span class="footer-right">
-        Fichiers utilisés : <code>metadata.json</code>, <code>proba_global.csv</code>, <code>stations.json</code>
+        Fichiers utilisés :
+        <code>metadata.json</code>, <code>proba_global.csv</code>,
+        <code>proba_od.csv</code>, <code>stations.json</code>,
+        <code>snapshot_today_od.csv</code>
       </span>
     </footer>
   </div>
