@@ -10,16 +10,11 @@
 
 <body>
   <div class="page">
-    <!-- HERO -->
-    <header class="hero hero--compact">
+    <header class="hero">
       <div class="hero__top">
         <a class="hero__brand" href="index.html" aria-label="Retour à l'accueil">
-          <img
-            class="hero__logoImg"
-            src="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/blacklogo.png"
-            alt="MaxCast"
-          />
-          <span class="hero__brandText">MaxCast</span>
+          <img src="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/blacklogo.png" alt="MaxCast" />
+          <span>MaxCast</span>
         </a>
 
         <nav class="nav">
@@ -31,122 +26,81 @@
 
       <h1 class="hero__title">Mentions légales</h1>
       <p class="hero__subtitle">
-        Le cadre. Simple, lisible, sans blabla inutile.
+        Informations légales, conditions d’utilisation, et confidentialité. Court, lisible, utile.
       </p>
+      <div class="hero__meta">Dernière mise à jour : <span id="lastUpdate"></span></div>
     </header>
 
     <main class="content">
-      <section class="section">
-        <div class="legal">
-          <div class="card">
-            <h2 class="card__title">1) Éditeur du site</h2>
-            <div class="legal__block">
-              <p><strong>Nom du site</strong> : MaxCast</p>
-              <p><strong>Responsable de publication</strong> : Matteo Toutain</p>
-              <p><strong>Contact</strong> : <a href="mailto:contact@maxcast.fr">contact@maxcast.fr</a></p>
-              <p class="card__hint">
-                Si tu veux anonymiser ces infos (RGPD / exposition), dis-moi : je te propose une version “éditeur = personne morale / contact indirect”.
-              </p>
-            </div>
-          </div>
+      <section class="panel">
+        <h2 class="panel__title">Éditeur du site</h2>
+        <p style="margin:0;color:var(--muted);line-height:1.7;">
+          <strong>Nom du site</strong> : MaxCast<br/>
+          <strong>Responsable de publication</strong> : Matteo Toutain<br/>
+          <strong>Contact</strong> : <a href="mailto:contact@maxcast.fr">contact@maxcast.fr</a>
+        </p>
+      </section>
 
-          <div class="card">
-            <h2 class="card__title">2) Hébergement</h2>
-            <div class="legal__block">
-              <p>
-                Site statique hébergé via une plateforme de type <strong>GitHub Pages</strong> (ou équivalent).
-              </p>
-              <p class="card__hint">
-                Remplace cette section par l’hébergeur exact (ex : GitHub, Vercel, Netlify) + l’entité légale si tu veux être nickel.
-              </p>
-            </div>
-          </div>
+      <section class="panel panel--soft">
+        <h2 class="panel__title">Hébergement</h2>
+        <p style="margin:0;color:var(--muted);line-height:1.7;">
+          Site hébergé via une plateforme de publication statique (ex : GitHub Pages / équivalent).
+          <br/><span style="color:var(--muted2);font-size:14px;">
+            Remplace cette phrase par l’hébergeur exact si tu veux une conformité “zéro débat”.
+          </span>
+        </p>
+      </section>
 
-          <div class="card">
-            <h2 class="card__title">3) Propriété intellectuelle</h2>
-            <div class="legal__block">
-              <p>
-                Sauf mention contraire, les contenus (textes, design, code spécifique au projet) sont protégés.
-                Toute reproduction / réutilisation substantielle sans autorisation est interdite.
-              </p>
-              <p>
-                Les marques et logos tiers (ex : SNCF) restent la propriété de leurs détenteurs.
-              </p>
-            </div>
-          </div>
+      <section class="panel">
+        <h2 class="panel__title">Propriété intellectuelle</h2>
+        <p style="margin:0;color:var(--muted);line-height:1.7;">
+          Sauf mention contraire, le contenu du site (textes, code spécifique, mise en forme) est protégé.
+          Toute reproduction ou réutilisation substantielle sans autorisation est interdite.
+          Les marques, logos et noms de services tiers restent la propriété de leurs détenteurs.
+        </p>
+      </section>
 
-          <div class="card">
-            <h2 class="card__title">4) Données & confidentialité</h2>
-            <div class="legal__block">
-              <p>
-                MaxCast n’a pas vocation à collecter des données personnelles.
-              </p>
-              <ul class="legal__list">
-                <li><strong>Formulaire contact</strong> : ouvre ton client mail (mailto). Rien n’est stocké côté site.</li>
-                <li><strong>Mesure d’audience</strong> : si tu n’utilises aucun outil (GA, Plausible, etc.), indique “aucun tracking”.</li>
-                <li><strong>Cookies</strong> : si aucun script tiers, alors “aucun cookie non essentiel”.</li>
-              </ul>
-              <p class="card__hint">
-                Si tu ajoutes un analytics un jour, il faudra mettre la base légale + durée de conservation + opt-out.
-              </p>
-            </div>
-          </div>
+      <section class="panel panel--soft">
+        <h2 class="panel__title">Données personnelles & cookies</h2>
+        <p style="margin:0;color:var(--muted);line-height:1.7;">
+          MaxCast n’a pas vocation à collecter des données personnelles.
+        </p>
+        <ul class="legal-list">
+          <li><strong>Contact</strong> : la page “Contact” utilise un <code>mailto:</code> (aucun stockage côté site).</li>
+          <li><strong>Cookies</strong> : aucun cookie non essentiel si aucun outil tiers n’est ajouté.</li>
+          <li><strong>Mesure d’audience</strong> : si tu n’as pas d’analytics, tu peux considérer “aucun tracking”.</li>
+        </ul>
+      </section>
 
-          <div class="card">
-            <h2 class="card__title">5) Limitation de responsabilité</h2>
-            <div class="legal__block">
-              <p>
-                MaxCast propose des estimations et des visualisations à partir de données disponibles. Ce n’est pas une garantie
-                d’ouverture réelle TGVmax. L’utilisateur reste responsable de ses décisions (réservations, déplacements, etc.).
-              </p>
-              <p>
-                Le site peut contenir des erreurs, interruptions, ou des indisponibilités temporaires.
-              </p>
-            </div>
-          </div>
+      <section class="panel">
+        <h2 class="panel__title">Limitation de responsabilité</h2>
+        <p style="margin:0;color:var(--muted);line-height:1.7;">
+          MaxCast propose des estimations basées sur des données disponibles. Ce n’est pas une garantie d’ouverture réelle.
+          L’utilisateur reste responsable de ses décisions (réservations, déplacements, etc.). Le service peut contenir des erreurs
+        ou être temporairement indisponible.
+        </p>
+      </section>
 
-          <div class="card">
-            <h2 class="card__title">6) Conditions d’utilisation (CGU)</h2>
-            <div class="legal__block">
-              <ul class="legal__list">
-                <li>Utilisation personnelle et raisonnable du service.</li>
-                <li>Interdiction de perturber le service (spam, scraping agressif, attaques, contournements).</li>
-                <li>Respect des lois et des droits de tiers.</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="card">
-            <h2 class="card__title">7) Contact</h2>
-            <div class="legal__block">
-              <p>
-                Pour toute question : <a href="mailto:contact@maxcast.fr">contact@maxcast.fr</a>
-              </p>
-              <p class="card__hint">
-                Dernière mise à jour : <span id="lastUpdate"></span>
-              </p>
-            </div>
-          </div>
-
-        </div>
+      <section class="panel panel--soft">
+        <h2 class="panel__title">Conditions d’utilisation (CGU)</h2>
+        <ul class="legal-list">
+          <li>Utilisation raisonnable, à des fins personnelles.</li>
+          <li>Interdiction de perturber le service (spam, scraping agressif, attaques, contournement).</li>
+          <li>Respect des lois et des droits de tiers.</li>
+        </ul>
       </section>
     </main>
 
     <footer class="footer">
-      <div class="footer__inner">
-        <span>© <span id="year"></span> MaxCast</span>
-        <div class="footer__links">
-          <a href="contact.html">Contact</a>
-          <a href="mentions-legales.html">Mentions légales</a>
-        </div>
-      </div>
+      © <span id="year"></span> MaxCast ·
+      <a href="contact.html">Contact</a> ·
+      <a href="mentions-legales.html">Mentions légales</a>
     </footer>
   </div>
 
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    // Mets une date manuelle si tu préfères. Là c’est auto = date du build/page load.
     const d = new Date();
     const pad = (n) => String(n).padStart(2, "0");
     document.getElementById("lastUpdate").textContent =
