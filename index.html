@@ -61,34 +61,40 @@
       <section class="panel">
         <h2 class="panel__title">Paramètres du trajet</h2>
 
-        <div class="form">
-          <div class="field">
-            <label for="origin-select">Gare de départ</label>
-            <div class="control">
-              <select id="origin-select">
-                <option value="">— Sélectionnez une gare —</option>
-              </select>
-            </div>
-          </div>
+                <div class="form">
+  <div class="field">
+    <label for="origin-select">Gare de départ</label>
+    <div class="control">
+      <select id="origin-select">
+        <option value="">— Sélectionnez une gare —</option>
+      </select>
+    </div>
+  </div>
 
-          <div class="field">
-            <label for="destination-select">Gare d’arrivée</label>
-            <div class="control">
-              <select id="destination-select">
-                <option value="">— Sélectionnez une gare —</option>
-              </select>
-            </div>
-          </div>
+  <div class="switch-wrap" aria-hidden="false">
+    <button id="swap-btn" type="button" class="swap-btn" title="Inverser départ / arrivée" aria-label="Inverser départ et arrivée">
+      ⇄
+    </button>
+  </div>
 
-          <div class="field field--full">
-            <div class="label-row">
-              <label for="date-select">Date de départ souhaitée</label>
-              <span class="help" title="La prédiction dépend du nombre de jours avant le départ.">?</span>
-            </div>
-            <div class="control">
-              <input type="date" id="date-select" />
-            </div>
-          </div>
+  <div class="field">
+    <label for="destination-select">Gare d’arrivée</label>
+    <div class="control">
+      <select id="destination-select">
+        <option value="">— Sélectionnez une gare —</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field field--full">
+    <div class="label-row">
+      <label for="date-select">Date de départ souhaitée</label>
+      <span class="help" title="La prédiction dépend du nombre de jours avant le départ.">?</span>
+    </div>
+    <div class="control">
+      <input type="date" id="date-select" />
+    </div>
+  </div>
 
           <p class="form__hint">
             MaxCast utilise la distribution historique de disponibilité TGVmax en fonction du nombre de jours avant le départ.
