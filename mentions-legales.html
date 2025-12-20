@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>MaxCast – Mentions légales</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="page">
+    <!-- HERO -->
+    <header class="hero hero--compact">
+      <div class="hero__top">
+        <a class="hero__brand" href="index.html" aria-label="Retour à l'accueil">
+          <img
+            class="hero__logoImg"
+            src="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/blacklogo.png"
+            alt="MaxCast"
+          />
+          <span class="hero__brandText">MaxCast</span>
+        </a>
+
+        <nav class="nav">
+          <a class="nav__link" href="index.html">Accueil</a>
+          <a class="nav__link" href="contact.html">Contact</a>
+          <a class="nav__link nav__link--active" href="mentions-legales.html">Mentions légales</a>
+        </nav>
+      </div>
+
+      <h1 class="hero__title">Mentions légales</h1>
+      <p class="hero__subtitle">
+        Le cadre. Simple, lisible, sans blabla inutile.
+      </p>
+    </header>
+
+    <main class="content">
+      <section class="section">
+        <div class="legal">
+          <div class="card">
+            <h2 class="card__title">1) Éditeur du site</h2>
+            <div class="legal__block">
+              <p><strong>Nom du site</strong> : MaxCast</p>
+              <p><strong>Responsable de publication</strong> : Matteo Toutain</p>
+              <p><strong>Contact</strong> : <a href="mailto:contact@maxcast.fr">contact@maxcast.fr</a></p>
+              <p class="card__hint">
+                Si tu veux anonymiser ces infos (RGPD / exposition), dis-moi : je te propose une version “éditeur = personne morale / contact indirect”.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="card__title">2) Hébergement</h2>
+            <div class="legal__block">
+              <p>
+                Site statique hébergé via une plateforme de type <strong>GitHub Pages</strong> (ou équivalent).
+              </p>
+              <p class="card__hint">
+                Remplace cette section par l’hébergeur exact (ex : GitHub, Vercel, Netlify) + l’entité légale si tu veux être nickel.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="card__title">3) Propriété intellectuelle</h2>
+            <div class="legal__block">
+              <p>
+                Sauf mention contraire, les contenus (textes, design, code spécifique au projet) sont protégés.
+                Toute reproduction / réutilisation substantielle sans autorisation est interdite.
+              </p>
+              <p>
+                Les marques et logos tiers (ex : SNCF) restent la propriété de leurs détenteurs.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="card__title">4) Données & confidentialité</h2>
+            <div class="legal__block">
+              <p>
+                MaxCast n’a pas vocation à collecter des données personnelles.
+              </p>
+              <ul class="legal__list">
+                <li><strong>Formulaire contact</strong> : ouvre ton client mail (mailto). Rien n’est stocké côté site.</li>
+                <li><strong>Mesure d’audience</strong> : si tu n’utilises aucun outil (GA, Plausible, etc.), indique “aucun tracking”.</li>
+                <li><strong>Cookies</strong> : si aucun script tiers, alors “aucun cookie non essentiel”.</li>
+              </ul>
+              <p class="card__hint">
+                Si tu ajoutes un analytics un jour, il faudra mettre la base légale + durée de conservation + opt-out.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="card__title">5) Limitation de responsabilité</h2>
+            <div class="legal__block">
+              <p>
+                MaxCast propose des estimations et des visualisations à partir de données disponibles. Ce n’est pas une garantie
+                d’ouverture réelle TGVmax. L’utilisateur reste responsable de ses décisions (réservations, déplacements, etc.).
+              </p>
+              <p>
+                Le site peut contenir des erreurs, interruptions, ou des indisponibilités temporaires.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="card__title">6) Conditions d’utilisation (CGU)</h2>
+            <div class="legal__block">
+              <ul class="legal__list">
+                <li>Utilisation personnelle et raisonnable du service.</li>
+                <li>Interdiction de perturber le service (spam, scraping agressif, attaques, contournements).</li>
+                <li>Respect des lois et des droits de tiers.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="card__title">7) Contact</h2>
+            <div class="legal__block">
+              <p>
+                Pour toute question : <a href="mailto:contact@maxcast.fr">contact@maxcast.fr</a>
+              </p>
+              <p class="card__hint">
+                Dernière mise à jour : <span id="lastUpdate"></span>
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <span>© <span id="year"></span> MaxCast</span>
+        <div class="footer__links">
+          <a href="contact.html">Contact</a>
+          <a href="mentions-legales.html">Mentions légales</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Mets une date manuelle si tu préfères. Là c’est auto = date du build/page load.
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    document.getElementById("lastUpdate").textContent =
+      `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+  </script>
+</body>
+</html>
