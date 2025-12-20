@@ -562,9 +562,28 @@ function addStatusHint(text) {
   }
 }
 
+function swapStations() {
+  const o = $("origin-select");
+  const d = $("destination-select");
+  if (!o || !d) return;
+
+  const tmp = o.value;
+  o.value = d.value;
+  d.value = tmp;
+
+  // Bonus UX : si les 3 champs sont remplis, on relance direct
+  const dateStr = $("date-select")?.value;
+  if (dateStr && o.value && d.value) {
+    onComputeClick();
+  }
+}
+
 // ===== 12. Listeners =====================================================
 
 document.addEventListener("DOMContentLoaded", () => {
   loadAll();
   $("compute-btn").addEventListener("click", onComputeClick);
+
+  const swapBtn = $("swap-btn");
+  if (swapBtn) swapBtn.addEventListener("click", swapStations);
 });
