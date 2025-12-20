@@ -10,16 +10,11 @@
 
 <body>
   <div class="page">
-    <!-- HERO -->
-    <header class="hero hero--compact">
+    <header class="hero">
       <div class="hero__top">
         <a class="hero__brand" href="index.html" aria-label="Retour à l'accueil">
-          <img
-            class="hero__logoImg"
-            src="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/blacklogo.png"
-            alt="MaxCast"
-          />
-          <span class="hero__brandText">MaxCast</span>
+          <img src="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/blacklogo.png" alt="MaxCast" />
+          <span>MaxCast</span>
         </a>
 
         <nav class="nav">
@@ -31,112 +26,110 @@
 
       <h1 class="hero__title">Contact</h1>
       <p class="hero__subtitle">
-        Une question, un bug, une idée d’amélioration ? Envoie, je lis.
+        Bug, suggestion, question sur le modèle ? Envoie-moi un message clair, avec la gare d’origine, la destination et la date si possible.
       </p>
+      <div class="hero__meta">Aucun tracking. Aucun stockage. Juste du concret.</div>
     </header>
 
-    <!-- CONTENT -->
     <main class="content">
-      <section class="section">
+      <section class="panel">
+        <h2 class="panel__title">Me joindre</h2>
         <div class="grid-2">
-          <div class="card">
-            <h2 class="card__title">Écris-moi</h2>
-            <p class="card__text">
-              Le plus simple : un mail. (Et si tu peux, mets un exemple concret : gare A → gare B, date, et ce que tu observes.)
+          <div>
+            <p style="margin-top:0;color:var(--muted);line-height:1.7;">
+              Le plus rapide : email. Si tu as une capture / un exemple de trajet, ajoute-le.
             </p>
 
-            <div class="contact-actions">
-              <a class="btn" href="mailto:contact@maxcast.fr?subject=MaxCast%20-%20Contact">📩 contact@maxcast.fr</a>
-              <a class="btn btn--ghost" href="https://github.com/matteotoutain/ECM_2526_FinalProject" target="_blank" rel="noreferrer">
-                🧩 GitHub (issues)
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+              <a class="btn" href="mailto:contact@maxcast.fr?subject=MaxCast%20-%20Contact">
+                <span class="btn__icon">✉️</span>contact@maxcast.fr
+              </a>
+              <a class="btn" href="https://github.com/matteotoutain/ECM_2526_FinalProject/issues" target="_blank" rel="noreferrer">
+                <span class="btn__icon">🧩</span>Ouvrir une issue GitHub
               </a>
             </div>
 
-            <div class="divider"></div>
-
-            <p class="card__hint">
-              Temps de réponse : quand je suis vivant (et pas en train de débugger un CSV à 2h du mat).
-            </p>
+            <div class="callout callout--warn" style="margin-top:16px;">
+              Astuce : si tu reportes un bug, précise “ce que tu attends” vs “ce que tu vois”.
+            </div>
           </div>
 
-          <div class="card">
-            <h2 class="card__title">Formulaire rapide</h2>
-            <p class="card__text">
-              Pas de backend ici : le formulaire ouvre ton client mail avec le message pré-rempli.
-            </p>
+          <div class="panel panel--soft" style="box-shadow:none;">
+            <h3 style="margin:0 0 10px;letter-spacing:-0.02em;">Message rapide</h3>
 
             <form class="form" id="contactForm">
-              <label class="field">
-                <span class="field__label">Nom / pseudo</span>
-                <input class="field__input" type="text" name="name" placeholder="Matteo" autocomplete="name" />
-              </label>
+              <div class="field">
+                <label for="name">Nom / pseudo</label>
+                <div class="control">
+                  <input id="name" name="name" type="text" placeholder="Matteo" />
+                </div>
+              </div>
 
-              <label class="field">
-                <span class="field__label">Email</span>
-                <input class="field__input" type="email" name="email" placeholder="toi@mail.com" autocomplete="email" />
-              </label>
+              <div class="field">
+                <label for="email">Email</label>
+                <div class="control">
+                  <input id="email" name="email" type="email" placeholder="toi@mail.com" />
+                </div>
+              </div>
 
-              <label class="field">
-                <span class="field__label">Sujet</span>
-                <input class="field__input" type="text" name="subject" placeholder="Bug / question / idée" />
-              </label>
+              <div class="field field--full">
+                <label for="subject">Sujet</label>
+                <div class="control">
+                  <input id="subject" name="subject" type="text" placeholder="Bug / idée / question" />
+                </div>
+              </div>
 
-              <label class="field">
-                <span class="field__label">Message</span>
-                <textarea class="field__textarea" name="message" rows="6" placeholder="Décris ton problème (ou ton idée) clairement."></textarea>
-              </label>
+              <div class="field field--full">
+                <label for="message">Message</label>
+                <div class="control">
+                  <textarea id="message" name="message" placeholder="Décris ton message ici…"></textarea>
+                </div>
+                <div class="form__hint">
+                  Envoi via ton client mail (mailto). Rien n’est stocké sur le site.
+                </div>
+              </div>
 
-              <button class="btn" type="submit">Envoyer (ouvre ton mail)</button>
-              <p class="form__note">
-                Aucun tracking, aucun stockage : c’est juste un mailto.
-              </p>
+              <button class="btn" type="submit">
+                <span class="btn__icon">🚀</span>Envoyer (ouvre ton mail)
+              </button>
             </form>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- FOOTER -->
     <footer class="footer">
-      <div class="footer__inner">
-        <span>© <span id="year"></span> MaxCast</span>
-        <div class="footer__links">
-          <a href="contact.html">Contact</a>
-          <a href="mentions-legales.html">Mentions légales</a>
-        </div>
-      </div>
+      © <span id="year"></span> MaxCast ·
+      <a href="contact.html">Contact</a> ·
+      <a href="mentions-legales.html">Mentions légales</a>
     </footer>
   </div>
 
   <script>
-    // year
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    // mailto builder
     document.getElementById("contactForm").addEventListener("submit", (e) => {
       e.preventDefault();
-
       const fd = new FormData(e.target);
+
       const name = (fd.get("name") || "").toString().trim();
       const email = (fd.get("email") || "").toString().trim();
       const subject = (fd.get("subject") || "").toString().trim();
       const message = (fd.get("message") || "").toString().trim();
 
       const finalSubject = subject ? `MaxCast – ${subject}` : "MaxCast – Contact";
-      const bodyLines = [
+      const body = [
         message || "(message vide)",
         "",
         "----",
         name ? `Nom: ${name}` : null,
         email ? `Email: ${email}` : null,
-      ].filter(Boolean);
+      ].filter(Boolean).join("\n");
 
-      const mailto =
+      window.location.href =
         "mailto:contact@maxcast.fr" +
         "?subject=" + encodeURIComponent(finalSubject) +
-        "&body=" + encodeURIComponent(bodyLines.join("\n"));
-
-      window.location.href = mailto;
+        "&body=" + encodeURIComponent(body);
     });
   </script>
 </body>
