@@ -15,34 +15,7 @@
 </head>
 
 <body>
-  <div class="intro" id="intro">
-    <div class="intro__inner">
-
-      <div class="intro__logo">
-        <div class="intro__pulse"></div>
-        <img
-          src="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/blacklogo.png"
-          alt="MaxCast logo"
-        />
-      </div>
-
-      <div class="intro__status">
-        <div class="intro__top">
-          <span id="intro-status-text">INITIALIZING</span>
-          <span id="intro-percent">0%</span>
-        </div>
-
-        <div class="intro__bar">
-          <i id="intro-bar-fill"></i>
-        </div>
-
-        <div class="intro__hint" id="intro-hint">
-          Pré-chargement des données…
-        </div>
-      </div>
-
-    </div>
-  </div>
+  
   <div class="page">
     <!-- HERO -->
     <header class="hero">
@@ -164,50 +137,5 @@
 
   <script src="app.js"></script>
 
-  <script>
-    const intro = document.getElementById("intro");
-    const bar = document.getElementById("intro-bar-fill");
-    const percent = document.getElementById("intro-percent");
-    const status = document.getElementById("intro-status-text");
-    const hint = document.getElementById("intro-hint");
-
-    const steps = [
-      ["INITIALIZING", "Pré-chargement des assets…"],
-      ["LOADING", "Chargement des modèles…"],
-      ["SYNC", "Synchronisation des données…"],
-      ["FINALIZING", "Derniers ajustements…"]
-    ];
-
-    let p = 0;
-    let step = 0;
-
-    const timer = setInterval(() => {
-      p = Math.min(100, p + Math.random() * (p < 70 ? 10 : 4));
-      bar.style.width = `${p}%`;
-      percent.textContent = `${Math.round(p)}%`;
-
-      const next =
-        p < 30 ? 0 :
-        p < 60 ? 1 :
-        p < 85 ? 2 : 3;
-
-      if (next !== step) {
-        step = next;
-        status.textContent = steps[step][0];
-        hint.textContent = steps[step][1];
-      }
-
-      if (p >= 100) {
-        clearInterval(timer);
-        status.textContent = "READY";
-        hint.textContent = "Bienvenue sur MaxCast";
-
-        setTimeout(() => {
-          intro.classList.add("outro");
-          setTimeout(() => intro.remove(), 1200);
-        }, 500);
-      }
-    }, 140);
-  </script>
 </body>
 </html>
