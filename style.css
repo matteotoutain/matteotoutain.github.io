@@ -562,3 +562,118 @@ code{
   }
 }
 
+
+
+
+
+
+
+/* ===== NAV (pour Contact + Mentions légales) ===== */
+.hero__top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.hero__brand{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  text-decoration:none;
+  color: var(--text);
+}
+.hero__brand img{
+  height: 54px;
+  width: auto;
+  display:block;
+}
+.hero__brand span{
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.nav{
+  display:flex;
+  gap: 12px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.nav__link{
+  text-decoration:none;
+  color: var(--muted);
+  font-weight: 700;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+.nav__link:hover{
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--panel-soft);
+}
+.nav__link--active{
+  color: var(--text);
+  border-color: var(--border);
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(17,24,39,.06);
+}
+
+@media (max-width: 720px){
+  .hero__top{
+    flex-direction:column;
+    align-items:center;
+  }
+  .nav{ justify-content:center; }
+}
+
+/* ===== Grilles pour pages “texte” ===== */
+.grid-2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 820px){
+  .grid-2{ grid-template-columns: 1fr; }
+}
+
+/* ===== Champs de formulaire (Contact) ===== */
+.control textarea{
+  width: 100%;
+  padding: 14px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #f3f4f6;
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+  transition: box-shadow .15s ease, border-color .15s ease, transform .05s ease;
+  resize: vertical;
+  min-height: 140px;
+}
+.control textarea:focus{
+  box-shadow: var(--focus);
+  border-color: #cbd5e1;
+}
+.control textarea:active{ transform: translateY(1px); }
+
+/* ===== Liste “Mentions légales” ===== */
+.legal-list{
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.legal-list li + li{ margin-top: 8px; }
+
+/* ===== Footer links ===== */
+.footer a{
+  color: var(--muted2);
+  text-decoration:none;
+  font-weight: 700;
+}
+.footer a:hover{
+  color: var(--text);
+  text-decoration:underline;
+  text-underline-offset: 4px;
+}
