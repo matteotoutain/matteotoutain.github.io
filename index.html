@@ -1,17 +1,45 @@
 <!DOCTYPE html>
-<html lang="fr"> 
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
+
+  <!-- ===== SEO de base ===== -->
   <title>MaxCast – Prévision TGVmax</title>
+  <meta name="description" content="MaxCast estime les probabilités d’ouverture des billets TGVmax par date, gare de départ et destination. Analyse basée sur l’historique des ouvertures SNCF." />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="MaxCast" />
+
+  <!-- ===== Mobile ===== -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- favicon (optionnel) -->
+  <!-- ===== Canonical ===== -->
+  <link rel="canonical" href="https://maxcast.fr/" />
+
+  <!-- ===== Open Graph (Google / Facebook / LinkedIn) ===== -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://maxcast.fr/" />
+  <meta property="og:title" content="MaxCast – Prévision d’ouverture TGVmax" />
+  <meta property="og:description" content="Probabilités d’ouverture TGVmax par trajet et par date, basées sur l’historique des ouvertures." />
+  <meta property="og:image" content="https://maxcast.fr/og-image.png" />
+  <meta property="og:locale" content="fr_FR" />
+
+  <!-- ===== Twitter Card ===== -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MaxCast – Prévision d’ouverture TGVmax" />
+  <meta name="twitter:description" content="Estime les chances d’ouverture TGVmax selon le trajet et la date." />
+  <meta name="twitter:image" content="https://maxcast.fr/og-image.png" />
+
+  <!-- ===== Favicons ===== -->
   <link rel="icon" href="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/icon.png" />
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/icon.png" />
+
+  <!-- ===== Styles ===== -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- ===== JS ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 </head>
+  
 
 <body>
     <div class="intro" id="intro">
