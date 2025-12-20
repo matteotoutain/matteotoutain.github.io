@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>MaxCast – Contact</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="page">
+    <!-- HERO -->
+    <header class="hero hero--compact">
+      <div class="hero__top">
+        <a class="hero__brand" href="index.html" aria-label="Retour à l'accueil">
+          <img
+            class="hero__logoImg"
+            src="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/blacklogo.png"
+            alt="MaxCast"
+          />
+          <span class="hero__brandText">MaxCast</span>
+        </a>
+
+        <nav class="nav">
+          <a class="nav__link" href="index.html">Accueil</a>
+          <a class="nav__link nav__link--active" href="contact.html">Contact</a>
+          <a class="nav__link" href="mentions-legales.html">Mentions légales</a>
+        </nav>
+      </div>
+
+      <h1 class="hero__title">Contact</h1>
+      <p class="hero__subtitle">
+        Une question, un bug, une idée d’amélioration ? Envoie, je lis.
+      </p>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="content">
+      <section class="section">
+        <div class="grid-2">
+          <div class="card">
+            <h2 class="card__title">Écris-moi</h2>
+            <p class="card__text">
+              Le plus simple : un mail. (Et si tu peux, mets un exemple concret : gare A → gare B, date, et ce que tu observes.)
+            </p>
+
+            <div class="contact-actions">
+              <a class="btn" href="mailto:contact@maxcast.fr?subject=MaxCast%20-%20Contact">📩 contact@maxcast.fr</a>
+              <a class="btn btn--ghost" href="https://github.com/matteotoutain/ECM_2526_FinalProject" target="_blank" rel="noreferrer">
+                🧩 GitHub (issues)
+              </a>
+            </div>
+
+            <div class="divider"></div>
+
+            <p class="card__hint">
+              Temps de réponse : quand je suis vivant (et pas en train de débugger un CSV à 2h du mat).
+            </p>
+          </div>
+
+          <div class="card">
+            <h2 class="card__title">Formulaire rapide</h2>
+            <p class="card__text">
+              Pas de backend ici : le formulaire ouvre ton client mail avec le message pré-rempli.
+            </p>
+
+            <form class="form" id="contactForm">
+              <label class="field">
+                <span class="field__label">Nom / pseudo</span>
+                <input class="field__input" type="text" name="name" placeholder="Matteo" autocomplete="name" />
+              </label>
+
+              <label class="field">
+                <span class="field__label">Email</span>
+                <input class="field__input" type="email" name="email" placeholder="toi@mail.com" autocomplete="email" />
+              </label>
+
+              <label class="field">
+                <span class="field__label">Sujet</span>
+                <input class="field__input" type="text" name="subject" placeholder="Bug / question / idée" />
+              </label>
+
+              <label class="field">
+                <span class="field__label">Message</span>
+                <textarea class="field__textarea" name="message" rows="6" placeholder="Décris ton problème (ou ton idée) clairement."></textarea>
+              </label>
+
+              <button class="btn" type="submit">Envoyer (ouvre ton mail)</button>
+              <p class="form__note">
+                Aucun tracking, aucun stockage : c’est juste un mailto.
+              </p>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer__inner">
+        <span>© <span id="year"></span> MaxCast</span>
+        <div class="footer__links">
+          <a href="contact.html">Contact</a>
+          <a href="mentions-legales.html">Mentions légales</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // year
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // mailto builder
+    document.getElementById("contactForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const fd = new FormData(e.target);
+      const name = (fd.get("name") || "").toString().trim();
+      const email = (fd.get("email") || "").toString().trim();
+      const subject = (fd.get("subject") || "").toString().trim();
+      const message = (fd.get("message") || "").toString().trim();
+
+      const finalSubject = subject ? `MaxCast – ${subject}` : "MaxCast – Contact";
+      const bodyLines = [
+        message || "(message vide)",
+        "",
+        "----",
+        name ? `Nom: ${name}` : null,
+        email ? `Email: ${email}` : null,
+      ].filter(Boolean);
+
+      const mailto =
+        "mailto:contact@maxcast.fr" +
+        "?subject=" + encodeURIComponent(finalSubject) +
+        "&body=" + encodeURIComponent(bodyLines.join("\n"));
+
+      window.location.href = mailto;
+    });
+  </script>
+</body>
+</html>
