@@ -22,14 +22,14 @@ const COL_DELTA_GLOBAL = "delta_days";
 const COL_PROBA_GLOBAL = "proba_open";
 
 // proba_od.csv
-const COL_OD_ORIGIN = "origin";
+const COL_OD_ORIGIN = "origine";
 const COL_OD_DEST = "destination";
 const COL_OD_DELTA = "delta_days";
 const COL_OD_PROBA = "proba_open";
 
 // snapshot_today_od.csv
 const COL_SNAP_DATE = "departure_date"; // IMPORTANT
-const COL_SNAP_ORIGIN = "origin";
+const COL_SNAP_ORIGIN = "origine";
 const COL_SNAP_DEST = "destination";
 const COL_SNAP_OPEN = "is_open_today";
 
