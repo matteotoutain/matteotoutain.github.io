@@ -239,6 +239,42 @@
     }, INTRO_TOTAL_MS);
   </script>
 
+  <script>
+  const INTRO_COOKIE = "intro_seen";
+  const INTRO_DURATION_MS = 6500; // durée de ton animation (à ajuster)
+
+  function hasSeenIntro() {
+    return document.cookie
+      .split("; ")
+      .some(row => row.startsWith(INTRO_COOKIE + "="));
+  }
+
+  function setIntroSeen() {
+    // cookie valable 1 an
+    const maxAge = 60 * 60 * 24 * 365;
+    document.cookie = `${INTRO_COOKIE}=true; max-age=${maxAge}; path=/; SameSite=Lax`;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const intro = document.getElementById("intro");
+
+    if (!intro) return;
+
+    if (hasSeenIntro()) {
+      // Déjà vu → on vire l’intro immédiatement
+      intro.style.display = "none";
+    } else {
+      // Première visite → on montre l’intro
+      setIntroSeen();
+
+      // À la fin de l’animation → on la masque
+      setTimeout(() => {
+        intro.classList.add("intro-hide");
+      }, INTRO_DURATION_MS);
+    }
+  });
+</script>
+
 </body>
 </html> 
 
