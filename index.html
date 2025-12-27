@@ -207,41 +207,10 @@
   </div>
 
   <script src="app.js"></script>
-<script>
-  
-    document.getElementById("year").textContent = new Date().getFullYear();
-  
-    // 1) Particules (optionnel, simple)
-    const particles = document.getElementById("particles");
-    function spawnParticle() {
-      const p = document.createElement("div");
-      p.className = "particle";
-      p.style.left = (Math.random() * 100) + "%";
-      p.style.top = (60 + Math.random() * 30) + "%";
-      p.style.animationDelay = "0ms";
-      particles.appendChild(p);
-      setTimeout(() => p.remove(), 2000);
-    }
-    const particleTimer = setInterval(spawnParticle, 120);
 
-    // 2) Timing : fin d'anim -> outro -> show page
-    // Ajuste si tu changes la durée du draw/fill/text.
-    const INTRO_TOTAL_MS = 6500; // draw(5s) + fill(1.5s) + text(à 5.5s)
-
-    const intro = document.getElementById("intro");
-    setTimeout(() => {
-      intro.classList.add("is-outro");
-      document.body.classList.add("loaded");
-      clearInterval(particleTimer);
-
-      // cleanup DOM après transition
-      setTimeout(() => intro.remove(), 1200);
-    }, INTRO_TOTAL_MS);
-  </script>
-
- <script>
+  <script>
   const INTRO_COOKIE = "intro_seen";
-  const INTRO_TOTAL_MS = 6500; // durée totale intro (animation + texte)
+  const INTRO_TOTAL_MS = 6500; // durée totale de ton intro
 
   function hasSeenIntro() {
     return document.cookie.split("; ").some(r => r.startsWith(INTRO_COOKIE + "="));
@@ -254,35 +223,49 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     const intro = document.getElementById("intro");
+    const particles = document.getElementById("particles");
 
-    // si tu utilises .page-content avec opacity 0 -> loaded la révèle
     const showPageNow = () => document.body.classList.add("loaded");
 
-    // Pas d’intro dans le DOM ? On révèle la page direct.
+    // Si pas d’intro → on affiche direct
     if (!intro) {
       showPageNow();
       return;
     }
 
-    // Déjà vu -> skip hard: on cache intro + on montre la page direct
+    // Si déjà vu → skip direct
     if (hasSeenIntro()) {
       intro.style.display = "none";
       showPageNow();
       return;
     }
 
-    // Première visite -> on joue l’intro
+    // Première visite → cookie + particules + outro
     setIntroSeen();
 
-    // option : on peut révéler la page juste après l’intro
+    let particleTimer = null;
+    if (particles) {
+      const spawnParticle = () => {
+        const p = document.createElement("div");
+        p.className = "particle";
+        p.style.left = (Math.random() * 100) + "%";
+        p.style.top = (60 + Math.random() * 30) + "%";
+        particles.appendChild(p);
+        setTimeout(() => p.remove(), 2000);
+      };
+      particleTimer = setInterval(spawnParticle, 120);
+    }
+
     setTimeout(() => {
-      intro.classList.add("is-outro"); // tu as déjà cette animation
+      intro.classList.add("is-outro");
       showPageNow();
 
-      // sécurité: supprimer l’intro après le fade
+      if (particleTimer) clearInterval(particleTimer);
+
+      // Nettoyage
       setTimeout(() => {
-        intro.style.display = "none";
-      }, 900);
+        intro.remove();
+      }, 1200);
     }, INTRO_TOTAL_MS);
   });
 </script>
