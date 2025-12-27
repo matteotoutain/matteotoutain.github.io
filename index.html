@@ -239,18 +239,15 @@
     }, INTRO_TOTAL_MS);
   </script>
 
-  <script>
+ <script>
   const INTRO_COOKIE = "intro_seen";
-  const INTRO_DURATION_MS = 6500; // durée de ton animation (à ajuster)
+  const INTRO_TOTAL_MS = 6500; // durée totale intro (animation + texte)
 
   function hasSeenIntro() {
-    return document.cookie
-      .split("; ")
-      .some(row => row.startsWith(INTRO_COOKIE + "="));
+    return document.cookie.split("; ").some(r => r.startsWith(INTRO_COOKIE + "="));
   }
 
   function setIntroSeen() {
-    // cookie valable 1 an
     const maxAge = 60 * 60 * 24 * 365;
     document.cookie = `${INTRO_COOKIE}=true; max-age=${maxAge}; path=/; SameSite=Lax`;
   }
@@ -258,23 +255,37 @@
   document.addEventListener("DOMContentLoaded", () => {
     const intro = document.getElementById("intro");
 
-    if (!intro) return;
+    // si tu utilises .page-content avec opacity 0 -> loaded la révèle
+    const showPageNow = () => document.body.classList.add("loaded");
 
-    if (hasSeenIntro()) {
-      // Déjà vu → on vire l’intro immédiatement
-      intro.style.display = "none";
-    } else {
-      // Première visite → on montre l’intro
-      setIntroSeen();
-
-      // À la fin de l’animation → on la masque
-      setTimeout(() => {
-        intro.classList.add("intro-hide");
-      }, INTRO_DURATION_MS);
+    // Pas d’intro dans le DOM ? On révèle la page direct.
+    if (!intro) {
+      showPageNow();
+      return;
     }
+
+    // Déjà vu -> skip hard: on cache intro + on montre la page direct
+    if (hasSeenIntro()) {
+      intro.style.display = "none";
+      showPageNow();
+      return;
+    }
+
+    // Première visite -> on joue l’intro
+    setIntroSeen();
+
+    // option : on peut révéler la page juste après l’intro
+    setTimeout(() => {
+      intro.classList.add("is-outro"); // tu as déjà cette animation
+      showPageNow();
+
+      // sécurité: supprimer l’intro après le fade
+      setTimeout(() => {
+        intro.style.display = "none";
+      }, 900);
+    }, INTRO_TOTAL_MS);
   });
 </script>
-
 </body>
 </html> 
 
