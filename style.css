@@ -682,3 +682,10 @@ code{
 #CybotCookiebotDialog{
   z-index: 2 !important;
 }
+
+
+.intro-hide {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
