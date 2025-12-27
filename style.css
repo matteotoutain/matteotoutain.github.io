@@ -677,3 +677,8 @@ code{
   text-decoration:underline;
   text-underline-offset: 4px;
 }
+
+
+#CybotCookiebotDialog{
+  z-index: 2;
+}
