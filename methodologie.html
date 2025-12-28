@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>MaxCast – Méthodologie</title>
+  <meta name="description" content="Méthodologie MaxCast : comment sont estimées les probabilités d’ouverture TGVmax à partir de snapshots historiques (delta jours, probabilités par trajet, fallback global, limites)." />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="MaxCast" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="canonical" href="https://maxcast.fr/methodologie.html" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://maxcast.fr/methodologie.html" />
+  <meta property="og:title" content="MaxCast – Méthodologie" />
+  <meta property="og:description" content="Comprendre comment MaxCast estime les chances d’ouverture TGVmax : snapshots, delta jours, probabilités par trajet, fallback et limites." />
+  <meta property="og:image" content="https://maxcast.fr/og-image.png" />
+  <meta property="og:locale" content="fr_FR" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MaxCast – Méthodologie" />
+  <meta name="twitter:description" content="Comment MaxCast estime la probabilité d’ouverture TGVmax." />
+  <meta name="twitter:image" content="https://maxcast.fr/og-image.png" />
+
+  <link rel="icon" href="icon.png" />
+  <link rel="apple-touch-icon" href="favicon.ico" />
+
+  <link rel="stylesheet" href="style.css" />
+  <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="0539a839-9a9b-4914-8568-90f5d195b695" data-blockingmode="auto" type="text/javascript"></script>
+</head>
+
+<body>
+  <!-- Header commun injecté -->
+  <div id="site-header"></div>
+
+  <div class="page">
+    <header class="hero">
+      <h1 class="hero__title">Méthodologie MaxCast</h1>
+      <p class="hero__subtitle">
+        MaxCast n’est pas une source officielle SNCF. C’est un outil d’estimation basé sur des <strong>snapshots historiques</strong>
+        de disponibilité. L’objectif : te donner une <strong>probabilité</strong> (pas une promesse) d’ouverture TGVmax, en fonction
+        du trajet et du délai avant départ.
+      </p>
+      <p class="hero__meta">
+        Dernière mise à jour : affichée sur la page d’accueil via les métadonnées.
+      </p>
+    </header>
+
+    <main class="content">
+
+      <section class="panel">
+        <h2 class="panel__title">1) Le point de départ : l’ouverture n’est pas aléatoire</h2>
+        <p class="form__hint">
+          L’ouverture des places TGVmax ressemble souvent à des “vagues” : certains trajets apparaissent plus fréquemment
+          à des délais similaires avant le départ (ex : 10–15 jours avant, ou 3–5 jours avant).  
+          MaxCast exploite ce signal : <strong>le délai</strong> est une variable très informative.
+        </p>
+      </section>
+
+      <section class="panel panel--soft">
+        <h2 class="panel__title">2) Les données utilisées : snapshots de disponibilité</h2>
+
+        <p class="form__hint">
+          MaxCast s’appuie sur des fichiers historiques (“snapshots”) décrivant, pour une date de départ donnée et un couple
+          origine/destination, si le trajet était <strong>ouvert</strong> ou <strong>fermé</strong> au moment du snapshot.
+        </p>
+
+        <ul class="bullets">
+          <li><strong>Ce qu’on observe</strong> : “à telle date de snapshot, pour tel trajet et telle date de départ, c’était ouvert/fermé”.</li>
+          <li><strong>Ce qu’on reconstruit</strong> : l’historique des ouvertures en fonction du <code>delta jours</code> (jours entre le snapshot et le départ).</li>
+          <li><strong>Ce qu’on évite</strong> : toute donnée personnelle (MaxCast n’a pas besoin de ton compte SNCF).</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel__title">3) La variable clé : le “delta jours”</h2>
+
+        <p class="form__hint">
+          On transforme chaque observation en une question simple :  
+          <strong>“À combien de jours du départ est-ce que ce trajet a déjà été ouvert dans le passé ?”</strong>
+        </p>
+
+        <p class="form__hint">
+          Exemple : si aujourd’hui on est le 1er, et que ton départ est le 20, alors le <code>delta jours</code> vaut 19.  
+          MaxCast compare ce delta à ce qu’il a déjà vu dans l’historique.
+        </p>
+      </section>
+
+      <section class="panel panel--soft">
+        <h2 class="panel__title">4) Comment sont calculées les probabilités</h2>
+
+        <div class="grid-2">
+          <div class="panel" style="box-shadow:none;">
+            <h3 style="margin:0 0 10px; font-size:18px; letter-spacing:-0.02em;">4.1 Probabilité “trajet” (origine → destination)</h3>
+            <p class="form__hint" style="margin:0;">
+              Quand on a assez d’historique pour un couple origine/destination, on calcule une probabilité conditionnelle :
+              <strong>P(ouvert | OD, delta)</strong>.  
+              En clair : “dans le passé, à ce délai-là, ce trajet était-il souvent ouvert ?”
+            </p>
+          </div>
+
+          <div class="panel" style="box-shadow:none;">
+            <h3 style="margin:0 0 10px; font-size:18px; letter-spacing:-0.02em;">4.2 Probabilité globale (fallback)</h3>
+            <p class="form__hint" style="margin:0;">
+              Si le trajet est trop rare (pas assez d’observations), on utilise une statistique plus générale :
+              <strong>P(ouvert | delta)</strong>.  
+              Ça garde une estimation utile, mais moins “personnalisée” au trajet.
+            </p>
+          </div>
+        </div>
+
+        <p class="form__hint">
+          Important : MaxCast affiche les deux (trajet + global) pour que tu voies la différence et que tu comprennes le niveau de confiance.
+        </p>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel__title">5) Le “snapshot du jour” : un état réel, pas une prédiction</h2>
+
+        <p class="form__hint">
+          En plus de la probabilité, MaxCast peut afficher un badge “Snapshot du jour : ouvert/fermé” quand on a la donnée du dernier snapshot.
+          Ce badge répond à une autre question :
+        </p>
+
+        <ul class="bullets">
+          <li><strong>Badge</strong> : “est-ce que c’est ouvert maintenant, dans le dernier snapshot ?”</li>
+          <li><strong>Probabilité</strong> : “à ce délai, est-ce que ça a tendance à s’ouvrir dans l’historique ?”</li>
+        </ul>
+
+        <p class="form__hint">
+          Tu peux avoir une proba non nulle même si c’est fermé aujourd’hui : ça veut juste dire “ça s’ouvre parfois à ce délai”, pas “c’est ouvert là”.
+        </p>
+      </section>
+
+      <section class="panel panel--soft">
+        <h2 class="panel__title">6) Mini-cours : stats vs ML, pourquoi c’est proche</h2>
+
+        <p class="form__hint">
+          Le cœur de MaxCast est statistique. Mais conceptuellement, tu peux le voir comme une forme de “machine learning” ultra simple :
+        </p>
+
+        <ul class="bullets">
+          <li><strong>Une donnée d’entrée</strong> : (origine, destination, delta jours)</li>
+          <li><strong>Une sortie</strong> : ouvert (1) / fermé (0)</li>
+          <li><strong>Un apprentissage</strong> : on “apprend” des fréquences historiques (probabilités) au lieu d’entraîner un gros modèle.</li>
+        </ul>
+
+        <p class="form__hint">
+          Dans beaucoup de problèmes, un modèle ML sophistiqué bat les stats simples… mais uniquement si tu as beaucoup de données propres,
+          des variables riches, et une stabilité dans le temps. Ici, la variable “delta” capture déjà une grosse partie du signal.
+          Résultat : une approche simple, lisible et stable est souvent le meilleur compromis.
+        </p>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel__title">7) Limites (et comment lire les résultats intelligemment)</h2>
+
+        <ul class="bullets">
+          <li><strong>Pas une garantie</strong> : une probabilité élevée n’implique pas que tu verras forcément l’ouverture.</li>
+          <li><strong>Trajets rares</strong> : si l’historique est faible, la proba “trajet” peut être absente ou instable.</li>
+          <li><strong>Effets externes</strong> : travaux, grèves, vacances, changements SNCF… l’historique ne “voit” pas le futur.</li>
+          <li><strong>Biais de collecte</strong> : un snapshot dépend de quand il a été pris (si on ne regarde pas au bon moment, on rate des ouvertures).</li>
+        </ul>
+
+        <p class="form__hint">
+          La meilleure utilisation : regarde la courbe, repère la fenêtre où la proba monte, et surveille dans cette zone.
+          MaxCast est un radar, pas une boule de cristal.
+        </p>
+      </section>
+
+      <section class="panel panel--soft">
+        <h2 class="panel__title">8) Transparence</h2>
+        <p class="form__hint">
+          MaxCast vise une expérience simple : expliquer ce qui est calculé, afficher les métriques utiles, et éviter la magie noire.
+          Si tu vois une incohérence (trajet “introuvable”, proba étrange, etc.), tu peux me contacter via la page Contact.
+        </p>
+      </section>
+
+    </main>
+
+    <!-- Footer commun injecté -->
+    <div id="site-footer"></div>
+  </div>
+
+  <script src="common.js"></script>
+</body>
+</html>
