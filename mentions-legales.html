@@ -13,25 +13,7 @@
 
 <body>
   <div class="page">
-    <header class="hero">
-      <div class="hero__top">
-        <a class="hero__brand" href="index.html" aria-label="Retour à l'accueil">
-          <img src="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/blacklogo.png" alt="MaxCast" />
-        </a>
-
-        <nav class="nav">
-          <a class="nav__link" href="index.html">Accueil</a>
-          <a class="nav__link" href="contact.html">Contact</a>
-          <a class="nav__link nav__link--active" href="mentions-legales.html">Mentions légales</a>
-        </nav>
-      </div>
-
-      <h1 class="hero__title">Mentions légales</h1>
-      <p class="hero__subtitle">
-        Informations légales, conditions d’utilisation, et confidentialité.
-      </p>
-      <div class="hero__meta">Dernière mise à jour : <span id="lastUpdate"></span></div>
-    </header>
+    <div id="site-header"></div>
 
     <main class="content">
       <section class="panel">
@@ -91,13 +73,10 @@
       </section>
     </main>
 
-    <footer class="footer">
-      © <span id="year"></span> MaxCast ·
-      <a href="contact.html">Contact</a> ·
-      <a href="mentions-legales.html">Mentions légales</a>
-    </footer>
+    <div id="site-footer"></div>
   </div>
-
+  
+  <script src="common.js"></script>
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
 
