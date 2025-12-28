@@ -96,41 +96,6 @@
       </header>
 
       <!-- EDITORIAL (pour AdSense + SEO) -->
-      <section class="panel panel--soft">
-        <h2 class="panel__title">Comprendre la prédiction (en 2 minutes)</h2>
-
-        <p class="form__hint" style="margin-top:0;">
-          Les billets TGVmax s’ouvrent par vagues. Le même trajet peut être indisponible pendant des jours,
-          puis apparaître d’un coup, parfois à des délais similaires avant le départ. MaxCast ne “devine” pas SNCF :
-          il mesure des tendances dans l’historique et te donne une estimation probabiliste.
-        </p>
-
-        <div class="grid-2">
-          <div class="panel" style="box-shadow:none;">
-            <h3 style="margin:0 0 10px; font-size:18px; letter-spacing:-0.02em;">Ce que MaxCast calcule</h3>
-            <ul class="bullets">
-              <li><strong>Une probabilité liée au délai</strong> : en fonction du nombre de jours entre aujourd’hui et ta date de départ.</li>
-              <li><strong>Une probabilité “trajet”</strong> quand il y a assez de données pour ton origine/destination.</li>
-              <li><strong>Un fallback global</strong> si le trajet est rare ou peu observé dans l’historique.</li>
-              <li><strong>Le statut du snapshot du jour</strong> (si disponible) : ouvert / fermé aujourd’hui pour ce couple origine-destination et cette date.</li>
-            </ul>
-          </div>
-
-          <div class="panel" style="box-shadow:none;">
-            <h3 style="margin:0 0 10px; font-size:18px; letter-spacing:-0.02em;">Ce que MaxCast ne fait pas</h3>
-            <ul class="bullets">
-              <li>Ce n’est <strong>pas</strong> une garantie d’ouverture (même à 90%).</li>
-              <li>Ce n’est <strong>pas</strong> une source officielle SNCF, et le service peut évoluer.</li>
-              <li>Les résultats peuvent être moins fiables sur les trajets peu fréquents, ou lors de périodes atypiques (travaux, grèves, pics).</li>
-            </ul>
-          </div>
-        </div>
-
-        <p class="form__hint" style="margin-bottom:0;">
-          Conseil pragmatique : si tu vois une probabilité qui monte à un certain délai, surveille cette fenêtre,
-          et garde une alternative (OUIGO, TER, autre date) si ton trajet est critique.
-        </p>
-      </section>
 
       <!-- MAIN -->
       <main class="content">
@@ -227,6 +192,42 @@
             </div>
           </div>
         </section>
+
+        <section class="panel panel--soft">
+        <h2 class="panel__title">Comprendre la prédiction (en 2 minutes)</h2>
+
+        <p class="form__hint" style="margin-top:0;">
+          Les billets TGVmax s’ouvrent par vagues. Le même trajet peut être indisponible pendant des jours,
+          puis apparaître d’un coup, parfois à des délais similaires avant le départ. MaxCast ne “devine” pas SNCF :
+          il mesure des tendances dans l’historique et te donne une estimation probabiliste.<br>
+        </p>
+
+        <div class="grid-2">
+          <div class="panel" style="box-shadow:none;">
+            <h3 style="margin:0 0 10px; font-size:18px; letter-spacing:-0.02em;">Ce que MaxCast calcule</h3>
+            <ul class="bullets">
+              <li><strong>Une probabilité liée au délai</strong> : en fonction du nombre de jours entre aujourd’hui et ta date de départ.</li>
+              <li><strong>Une probabilité “trajet”</strong> quand il y a assez de données pour ton origine/destination.</li>
+              <li><strong>Un fallback global</strong> si le trajet est rare ou peu observé dans l’historique.</li>
+              <li><strong>Le statut du snapshot du jour</strong> (si disponible) : ouvert / fermé aujourd’hui pour ce couple origine-destination et cette date.</li>
+            </ul>
+          </div>
+
+          <div class="panel" style="box-shadow:none;">
+            <h3 style="margin:0 0 10px; font-size:18px; letter-spacing:-0.02em;">Ce que MaxCast ne fait pas</h3>
+            <ul class="bullets">
+              <li>Ce n’est <strong>pas</strong> une garantie d’ouverture (même à 90%).</li>
+              <li>Ce n’est <strong>pas</strong> une source officielle SNCF, et le service peut évoluer.</li>
+              <li>Les résultats peuvent être moins fiables sur les trajets peu fréquents, ou lors de périodes atypiques (travaux, grèves, pics).</li>
+            </ul>
+          </div>
+        </div>
+
+        <p class="form__hint" style="margin-bottom:0;">
+          Conseil pragmatique : si tu vois une probabilité qui monte à un certain délai, surveille cette fenêtre,
+          et garde une alternative (OUIGO, TER, autre date) si ton trajet est critique.
+        </p>
+      </section>
 
         <!-- MINI FAQ (bonus qualité/AdSense) -->
         <section class="panel panel--soft">
