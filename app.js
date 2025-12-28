@@ -4,22 +4,16 @@
 
 const URL_METADATA =
   "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/metadata.json";
-const URL_PROBA_GLOBAL =
-  "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/proba_global.csv";
 const URL_STATIONS =
   "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/stations.json";
 
-// ➕ nouveaux fichiers à générer côté backend
+// fichiers backend
 const URL_PROBA_OD =
   "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/proba_od.csv";
 const URL_SNAPSHOT_TODAY_OD =
   "https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/precomputed/snapshot_today_od.csv";
 
 // ===== 2. Schéma attendu ================================================
-
-// proba_global.csv
-const COL_DELTA_GLOBAL = "delta_days";
-const COL_PROBA_GLOBAL = "proba_open";
 
 // proba_od.csv
 const COL_OD_ORIGIN = "origine";
@@ -38,7 +32,6 @@ const COL_SNAP_OPEN = "is_open_today";
 let metaData = null;
 let stations = [];
 
-let globalRows = []; // [{ delta_days, proba_open }]
 let odByKey = {};    // { "ORIGIN||DEST": [{delta_days, proba_open}, ...] }
 // snapshotToday = { "YYYY-MM-DD": { "ORIGIN||DEST": bool } }
 let snapshotToday = {};
@@ -73,15 +66,8 @@ function odKey(origin, destination) {
 
 async function loadAll() {
   try {
-    const [
-      metaRes,
-      globalRes,
-      stationsRes,
-      odRes,
-      snapRes
-    ] = await Promise.all([
+    const [metaRes, stationsRes, odRes, snapRes] = await Promise.all([
       fetch(URL_METADATA),
-      fetch(URL_PROBA_GLOBAL),
       fetch(URL_STATIONS),
       fetch(URL_PROBA_OD),
       fetch(URL_SNAPSHOT_TODAY_OD)
@@ -94,23 +80,6 @@ async function loadAll() {
     } else {
       $("meta-line").textContent = "Métadonnées non disponibles.";
     }
-
-    // proba_global.csv
-    if (!globalRes.ok) {
-      throw new Error("Impossible de charger proba_global.csv");
-    }
-    const globalText = await globalRes.text();
-    const globalRaw = parseCSV(globalText);
-    globalRows = globalRaw
-      .map((r) => ({
-        delta_days: parseInt(r[COL_DELTA_GLOBAL] || "NaN", 10),
-        proba_open: parseFloat(r[COL_PROBA_GLOBAL] || "NaN")
-      }))
-      .filter(
-        (r) =>
-          Number.isFinite(r.delta_days) && Number.isFinite(r.proba_open)
-      )
-      .sort((a, b) => a.delta_days - b.delta_days);
 
     // stations.json
     if (stationsRes.ok) {
@@ -126,7 +95,7 @@ async function loadAll() {
       const odRaw = parseCSV(odText);
       buildOdIndex(odRaw);
     } else {
-      console.warn("proba_od.csv non disponible => seulement proba globale.");
+      console.warn("proba_od.csv non disponible => aucune proba affichable.");
     }
 
     // snapshot_today_od.csv
@@ -141,7 +110,6 @@ async function loadAll() {
     }
 
     prefillDateToday();
-    updateRangeInfo();
     setStatus("Données chargées, sélectionne un trajet.", "neutral");
   } catch (e) {
     console.error(e);
@@ -161,12 +129,11 @@ function updateMetadataLine() {
   const nRaw = metaData.n_rows_raw || "n.c.";
   const nEnriched = metaData.n_rows_enriched || "n.c.";
   const nStations = metaData.n_stations || "n.c.";
-  const nGlobal = metaData.n_rows_proba_global || "n.c.";
   const nOd = metaData.n_rows_proba_od || "n.c.";
 
   el.textContent =
     `Généré le ${genAt} • ${nRaw} lignes brutes • ${nEnriched} enrichies • ` +
-    `${nStations} gares • ${nGlobal} globales • ${nOd} OD`;
+    `${nStations} gares • ${nOd} OD`;
 }
 
 // ===== 5. Parsing CSV simple ============================================
@@ -279,16 +246,6 @@ function prefillDateToday() {
   $("date-select").value = `${yyyy}-${mm}-${dd}`;
 }
 
-function updateRangeInfo() {
-  if (!globalRows.length) return;
-  // (tu peux supprimer si tu n'affiches plus range-value)
-  const el = $("range-value");
-  if (!el) return;
-  const minDelta = globalRows[0].delta_days;
-  const maxDelta = globalRows[globalRows.length - 1].delta_days;
-  el.textContent = `${minDelta} → ${maxDelta}`;
-}
-
 // ===== 8. Calcul & affichage ============================================
 
 function computeDeltaDaysFromToday(dateStr) {
@@ -301,21 +258,6 @@ function computeDeltaDaysFromToday(dateStr) {
   );
   const diffMs = travel.getTime() - todayMidnight.getTime();
   return Math.round(diffMs / (1000 * 60 * 60 * 24));
-}
-
-function findClosestGlobal(delta) {
-  if (!globalRows.length) return null;
-  let best = globalRows[0];
-  let bestDist = Math.abs(best.delta_days - delta);
-  for (let i = 1; i < globalRows.length; i++) {
-    const r = globalRows[i];
-    const dist = Math.abs(r.delta_days - delta);
-    if (dist < bestDist) {
-      best = r;
-      bestDist = dist;
-    }
-  }
-  return best;
 }
 
 function findClosestOdRow(series, delta) {
@@ -355,13 +297,7 @@ function onComputeClick() {
   // 1) snapshot du jour (INDEXÉ PAR DATE + OD)
   updateTodayBadge(dateStr, origin, dest);
 
-  // 2) proba globale (fallback)
-  const globalRow = findClosestGlobal(delta);
-  const globalProb = globalRow ? globalRow.proba_open : null;
-  $("probability-global-value").textContent =
-    globalProb == null ? "–" : (globalProb * 100).toFixed(0) + " %";
-
-  // 3) proba OD
+  // 2) proba OD uniquement
   const series = odByKey[key] || [];
   const odRow = findClosestOdRow(series, delta);
   const odProb = odRow ? odRow.proba_open : null;
@@ -369,36 +305,35 @@ function onComputeClick() {
   if (odProb == null) {
     $("probability-value").textContent = "–";
     setStatus(
-      "Pas de données spécifiques pour ce trajet. Affichage de la probabilité globale.",
+      "Aucune donnée pour ce trajet (OD). Choisis un autre trajet.",
       "warning"
     );
-    if (globalProb != null && globalProb >= 0.7) {
-      addStatusHint("Trajet probablement souvent ouvert, mais sans historique OD dédié.");
-    }
     drawChart(series, key);
-  } else {
-    $("probability-value").textContent = (odProb * 100).toFixed(0) + " %";
-
-    if (odProb >= 0.5) {
-      setStatus("Fortes chances d'ouverture TGVmax pour ce trajet.", "positive");
-    } else if (odProb <= 0.3) {
-      setStatus("Faibles chances d'ouverture TGVmax pour ce trajet.", "negative");
-    } else {
-      setStatus("Zone grise : ouverture TGVmax incertaine.", "neutral");
-    }
-
-    if (series.length) {
-      const minD = series[0].delta_days;
-      const maxD = series[series.length - 1].delta_days;
-      if (delta < minD || delta > maxD) {
-        showWarning(
-          `Delta ${delta} hors de la plage observée pour ce trajet (${minD} → ${maxD}). ` +
-          "La proba OD est basée sur le delta le plus proche."
-        );
-      }
-    }
-    drawChart(series, key);
+    return;
   }
+
+  $("probability-value").textContent = (odProb * 100).toFixed(0) + " %";
+
+  if (odProb >= 0.5) {
+    setStatus("Fortes chances d'ouverture TGVmax pour ce trajet.", "positive");
+  } else if (odProb <= 0.3) {
+    setStatus("Faibles chances d'ouverture TGVmax pour ce trajet.", "negative");
+  } else {
+    setStatus("Zone grise : ouverture TGVmax incertaine.", "neutral");
+  }
+
+  if (series.length) {
+    const minD = series[0].delta_days;
+    const maxD = series[series.length - 1].delta_days;
+    if (delta < minD || delta > maxD) {
+      showWarning(
+        `Delta ${delta} hors de la plage observée pour ce trajet (${minD} → ${maxD}). ` +
+        "La proba OD est basée sur le delta le plus proche."
+      );
+    }
+  }
+
+  drawChart(series, key);
 
   // Debug
   const dbg = $("debug-info");
@@ -412,7 +347,6 @@ function onComputeClick() {
         key,
         delta,
         snapshot_lookup: snapshotToday?.[normText(dateStr)]?.[key],
-        global_used: globalRow,
         od_used: odRow,
         has_series: series.length
       },
@@ -426,6 +360,7 @@ function onComputeClick() {
 
 function updateTodayBadge(departureDateStr, origin, dest) {
   const badge = $("today-badge");
+  if (!badge) return;
 
   const dep = normText(departureDateStr);
   const key = odKey(origin, dest);
@@ -509,11 +444,15 @@ function drawChart(series, key) {
 // ===== 11. Messages / erreurs ===========================================
 
 function showFatalError(msg) {
-  $("result-status").textContent = msg;
-  $("result-status").className = "status status--negative";
-  $("probability-value").textContent = "–";
-  $("probability-global-value").textContent = "–";
-  $("delta-value").textContent = "–";
+  const rs = $("result-status");
+  if (rs) {
+    rs.textContent = msg;
+    rs.className = "status status--negative";
+  }
+  const pv = $("probability-value");
+  if (pv) pv.textContent = "–";
+  const dv = $("delta-value");
+  if (dv) dv.textContent = "–";
 }
 
 function resetMessages() {
@@ -536,7 +475,6 @@ function setStatus(text, level) {
 
   el.textContent = text;
 
-  // Compat : si tu utilises l'ancien CSS (result-status--*), change ici.
   let cls = "status status--neutral";
   if (level === "positive") cls = "status status--positive";
   if (level === "negative") cls = "status status--negative";
@@ -549,17 +487,6 @@ function showWarning(html) {
   if (!w) return;
   w.innerHTML = html;
   w.classList.remove("hidden");
-}
-
-function addStatusHint(text) {
-  const w = $("warning-box");
-  if (!w) return;
-  if (w.classList.contains("hidden")) {
-    w.innerHTML = text;
-    w.classList.remove("hidden");
-  } else {
-    w.innerHTML += "<br>" + text;
-  }
 }
 
 function swapStations() {
@@ -582,7 +509,7 @@ function swapStations() {
 
 document.addEventListener("DOMContentLoaded", () => {
   loadAll();
-  $("compute-btn").addEventListener("click", onComputeClick);
+  $("compute-btn")?.addEventListener("click", onComputeClick);
 
   const swapBtn = $("swap-btn");
   if (swapBtn) swapBtn.addEventListener("click", swapStations);
