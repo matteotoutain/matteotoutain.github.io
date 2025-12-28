@@ -145,33 +145,34 @@
         </section>
 
         <!-- RESULTS -->
-        <section class="panel">
-          <div class="results__header">
-            <h2 class="panel__title">Résultat</h2>
+        <section class="panel" id="results-panel" style="display:none;">
+  <div class="results__header">
+    <h2 class="panel__title">Résultat</h2>
 
-            <div id="today-badge" class="badge badge--unknown">
-              Snapshot du jour : statut inconnu
-            </div>
-          </div>
+    <div id="today-badge" class="badge badge--unknown">
+      Snapshot du jour : statut inconnu
+    </div>
+  </div>
 
-          <div id="result-status" class="status status--neutral">
-            En attente d’un trajet…
-          </div>
+  <div id="result-status" class="status status--neutral">
+    En attente d’un trajet…
+  </div>
 
-          <div class="kpis">
-            <div class="kpi">
-              <div class="kpi__label">Probabilité trajet</div>
-              <div id="probability-value" class="kpi__value">—</div>
-            </div>
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi__label">Probabilité trajet</div>
+      <div id="probability-value" class="kpi__value">—</div>
+    </div>
 
-            <div class="kpi">
-              <div class="kpi__label">Delta jours (date − aujourd’hui)</div>
-              <div id="delta-value" class="kpi__value">—</div>
-            </div>
-          </div>
+    <div class="kpi">
+      <div class="kpi__label">Delta jours (date − aujourd’hui)</div>
+      <div id="delta-value" class="kpi__value">—</div>
+    </div>
+  </div>
 
-          <div id="warning-box" class="callout callout--warn hidden"></div>
+  <div id="warning-box" class="callout callout--warn hidden"></div>
 
+  
 <details class="chart-collapsible" id="chart-details">
   <summary class="chart-collapsible__summary">
     <span>Courbe de probabilité (trajet)</span>
@@ -184,7 +185,20 @@
     </div>
   </div>
 </details>
-        </section>
+          
+</section>
+
+<!-- Loader (faux chargement) -->
+<section class="panel" id="results-loading" style="display:none;">
+  <div class="fake-loading">
+    <div class="spinner" aria-hidden="true"></div>
+    <div>
+      <div class="fake-loading__title">Analyse en cours…</div>
+      <div class="fake-loading__sub">On calcule la probabilité pour ton trajet.</div>
+    </div>
+  </div>
+</section>
+      
 
         <section class="panel panel--soft">
         <h2 class="panel__title">Comprendre la prédiction (en 2 minutes)</h2>
