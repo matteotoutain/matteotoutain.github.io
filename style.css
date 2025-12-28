@@ -733,3 +733,35 @@ code{
 .chart-collapsible[open] .chart {
   margin-top: 10px;
 }
+
+
+.fake-loading{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:10px 2px;
+}
+
+.fake-loading__title{
+  font-weight:600;
+  letter-spacing:-0.01em;
+}
+
+.fake-loading__sub{
+  font-size:13px;
+  opacity:0.75;
+  margin-top:2px;
+}
+
+.spinner{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  border:3px solid rgba(0,0,0,0.15);
+  border-top-color: rgba(0,0,0,0.55);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin{
+  to{ transform: rotate(360deg); }
+}
