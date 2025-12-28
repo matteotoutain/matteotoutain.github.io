@@ -838,3 +838,63 @@ code{
     opacity: 1;
   }
 }
+
+/* Overlay anti-adblock */
+#adblock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(6px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal */
+.adblock-modal {
+  max-width: 420px;
+  padding: 32px;
+  border-radius: 18px;
+  text-align: center;
+
+  background: #ffffff;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.adblock-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  letter-spacing: -0.02em;
+}
+
+.adblock-text {
+  font-size: 15px;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+.adblock-btn {
+  margin-top: 24px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: none;
+
+  font-weight: 600;
+  cursor: pointer;
+
+  background: #000;
+  color: #fff;
+}
+
+.adblock-btn:hover {
+  opacity: 0.85;
+}
+
+.adblock-note {
+  margin-top: 14px;
+  font-size: 12px;
+  opacity: 0.6;
+}
