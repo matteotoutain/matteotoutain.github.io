@@ -374,22 +374,45 @@
 </script>
 
 <script>
-    window.addEventListener('load', function () {
-        DetectAb(function (result, method) {
-            var info = document.createElement('div');
+  window.addEventListener("load", function () {
+    DetectAb(function (isAdblock, method) {
+      if (!isAdblock) return;
 
-            if (result) {
-                info.className = 'info detected';
-                info.innerHTML = 'Your browser seems to have an ad-blocking plugin enabled. <br> It is recommended if you can add this domain to your adblocker\'s whitelist to enable a seamless viewing experience of this website.';
-                console.log('Method:', method === 1 ? 'CSS bait' : 'URL');
-            } else {
-                info.className = 'info';
-                info.innerHTML = 'Ad-blocking plugin is not detected';
-            }
+      // 1. Bloquer le scroll
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
 
-            document.body.appendChild(info);
-        }, true);
-    });
+      // 2. Créer l'overlay
+      const overlay = document.createElement("div");
+      overlay.id = "adblock-overlay";
+      overlay.innerHTML = `
+        <div class="adblock-modal">
+          <div class="adblock-title">Adblock détecté</div>
+          <div class="adblock-text">
+            MaxCast est gratuit et financé par la publicité.<br><br>
+            Merci de désactiver votre bloqueur de publicité
+            ou d’ajouter <strong>maxcast.fr</strong> à la liste blanche
+            pour accéder au site.
+          </div>
+
+          <button class="adblock-btn" onclick="location.reload()">
+            J’ai désactivé Adblock
+          </button>
+
+          <div class="adblock-note">
+            Aucun tracking, aucune donnée personnelle collectée.
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      console.log(
+        "[Adblock] détecté via",
+        method === 1 ? "CSS bait" : "URL"
+      );
+    }, true);
+  });
 </script>
 </body>
 </html>
