@@ -379,7 +379,7 @@ function onComputeClick() {
   } else {
     $("probability-value").textContent = (odProb * 100).toFixed(0) + " %";
 
-    if (odProb >= 0.7) {
+    if (odProb >= 0.5) {
       setStatus("Fortes chances d'ouverture TGVmax pour ce trajet.", "positive");
     } else if (odProb <= 0.3) {
       setStatus("Faibles chances d'ouverture TGVmax pour ce trajet.", "negative");
