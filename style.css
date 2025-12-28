@@ -765,3 +765,76 @@ code{
 @keyframes spin{
   to{ transform: rotate(360deg); }
 }
+
+
+.fake-loading{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:10px 2px;
+}
+
+.fake-loading__title{ font-weight:600; letter-spacing:-0.01em; }
+.fake-loading__sub{ font-size:13px; opacity:0.75; margin-top:2px; }
+
+.fake-loading__logo{
+  width:46px;
+  height:46px;
+  flex:0 0 46px;
+  border-radius:14px;
+  overflow:hidden;
+  background: rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.06);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.mini-intro-logo{
+  width:42px;
+  height:42px;
+  display:block;
+}
+
+/* Animation style intro */
+.mini-intro-logo .main-path{
+  fill: none;
+  stroke: rgba(0,0,0,0.9);
+  stroke-width: 22;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  stroke-dasharray: 9000;
+  stroke-dashoffset: 9000;
+  animation: miniDraw 1.6s ease-in-out infinite;
+}
+
+.mini-intro-logo .fill-path{
+  fill: rgba(0,0,0,0.92);
+  opacity: 0;
+  animation: miniFill 1.6s ease-in-out infinite;
+}
+
+/* loop: draw -> fill -> reset */
+@keyframes miniDraw{
+  0%   { stroke-dashoffset: 9000; opacity: 1; }
+  55%  { stroke-dashoffset: 0;    opacity: 1; }
+  100% { stroke-dashoffset: 0;    opacity: 1; }
+}
+
+@keyframes miniFill{
+  0%   { opacity: 0; }
+  60%  { opacity: 0; }
+  80%  { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+/* Accessibilité */
+@media (prefers-reduced-motion: reduce){
+  .mini-intro-logo .main-path,
+  .mini-intro-logo .fill-path{
+    animation: none !important;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
