@@ -258,57 +258,60 @@
   <script src="common.js"></script>
 
   <script>
-    const INTRO_COOKIE = "intro_seen";
-    const INTRO_TOTAL_MS = 6500;
+  const INTRO_COOKIE = "intro_seen";
+  const INTRO_TOTAL_MS = 6500;
 
-    function hasSeenIntro() {
-      return document.cookie.split("; ").some(r => r.startsWith(INTRO_COOKIE + "="));
+  function hasSeenIntro() {
+    return document.cookie
+      .split(";")
+      .map(c => c.trim())
+      .some(c => c.startsWith(INTRO_COOKIE + "="));
+  }
+
+  function setIntroSeen() {
+    const maxAge = 60 * 60; // 1 heure
+    document.cookie = `${INTRO_COOKIE}=true; max-age=${maxAge}; path=/; SameSite=Lax`;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const intro = document.getElementById("intro");
+    const particles = document.getElementById("particles");
+    const showPageNow = () => document.body.classList.add("loaded");
+
+    if (!intro) { showPageNow(); return; }
+
+    if (hasSeenIntro()) {
+      intro.style.display = "none";
+      showPageNow();
+      return;
     }
 
-    function setIntroSeen() {
-      const maxAge = 60 * 60 * 24 * 365;
-      document.cookie = `${INTRO_COOKIE}=true; max-age=${maxAge}; path=/; SameSite=Lax`;
+    setIntroSeen();
+
+    let particleTimer = null;
+    if (particles) {
+      const spawnParticle = () => {
+        const p = document.createElement("div");
+        p.className = "particle";
+        p.style.left = (Math.random() * 100) + "%";
+        p.style.top = (60 + Math.random() * 30) + "%";
+        particles.appendChild(p);
+        setTimeout(() => p.remove(), 2000);
+      };
+      particleTimer = setInterval(spawnParticle, 120);
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const intro = document.getElementById("intro");
-      const particles = document.getElementById("particles");
-      const showPageNow = () => document.body.classList.add("loaded");
+    setTimeout(() => {
+      intro.classList.add("is-outro");
+      showPageNow();
 
-      if (!intro) { showPageNow(); return; }
+      if (particleTimer) clearInterval(particleTimer);
 
-      if (hasSeenIntro()) {
-        intro.style.display = "none";
-        showPageNow();
-        return;
-      }
+      setTimeout(() => { intro.remove(); }, 1200);
+    }, INTRO_TOTAL_MS);
+  });
 
-      setIntroSeen();
-
-      let particleTimer = null;
-      if (particles) {
-        const spawnParticle = () => {
-          const p = document.createElement("div");
-          p.className = "particle";
-          p.style.left = (Math.random() * 100) + "%";
-          p.style.top = (60 + Math.random() * 30) + "%";
-          particles.appendChild(p);
-          setTimeout(() => p.remove(), 2000);
-        };
-        particleTimer = setInterval(spawnParticle, 120);
-      }
-
-      setTimeout(() => {
-        intro.classList.add("is-outro");
-        showPageNow();
-
-        if (particleTimer) clearInterval(particleTimer);
-
-        setTimeout(() => { intro.remove(); }, 1200);
-      }, INTRO_TOTAL_MS);
-    });
-
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
 </body>
 </html>
