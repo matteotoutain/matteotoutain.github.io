@@ -72,28 +72,7 @@
     <div class="page">
 
       <!-- HERO -->
-      <header class="hero">
-        <div class="hero__top">
-          <a class="hero__brand" href="index.html" aria-label="Retour à l'accueil">
-            <img src="https://raw.githubusercontent.com/matteotoutain/ECM_2526_FinalProject/main/blacklogo.png" alt="MaxCast" />
-          </a>
-
-          <nav class="nav">
-            <a class="nav__link nav__link--active" href="index.html">Accueil</a>
-            <a class="nav__link" href="contact.html">Contact</a>
-            <a class="nav__link" href="mentions-legales.html">Mentions légales</a>
-          </nav>
-        </div>
-
-        <h1 class="hero__title">MaxCast – Prévision TGVmax</h1>
-
-        <p class="hero__subtitle">
-          MaxCast estime la probabilité d’ouverture des places <strong>TGVmax</strong> pour une date donnée et un trajet donné,
-          à partir d’historiques de disponibilité observés dans des snapshots publics.
-        </p>
-
-        <p id="meta-line" class="hero__meta">Chargement des métadonnées…</p>
-      </header>
+      <div id="site-header"></div>
 
       <!-- EDITORIAL (pour AdSense + SEO) -->
 
@@ -270,17 +249,13 @@
 
       </main>
 
-      <footer class="footer">
-        <span>Made with ❤️ in Centrale Méditerranée</span><br>
-        © <span id="year"></span> MaxCast ·
-        <a href="contact.html">Contact</a> ·
-        <a href="mentions-legales.html">Mentions légales</a>
-      </footer>
+      <div id="site-footer"></div>
 
     </div>
   </div>
 
   <script src="app.js"></script>
+  <script src="common.js"></script>
 
   <script>
     const INTRO_COOKIE = "intro_seen";
