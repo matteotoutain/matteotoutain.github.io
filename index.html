@@ -134,8 +134,7 @@
 
             <p class="form__hint">
               MaxCast utilise la distribution historique de disponibilité en fonction du <strong>delta jours</strong>.
-              Quand c’est possible, la prévision est spécifique à ton trajet (origine/destination) ; sinon, elle retombe sur une
-              statistique globale. Si les données le permettent, l’état réel du trajet dans le snapshot d’aujourd’hui est aussi affiché.
+              Quand c’est possible, la prévision est spécifique à ton trajet (origine/destination). Si les données le permettent, l’état réel du trajet dans le snapshot d’aujourd’hui est aussi affiché.
             </p>
 
             <button id="compute-btn" class="btn">
@@ -196,7 +195,6 @@
             <ul class="bullets">
               <li><strong>Une probabilité liée au délai</strong> : en fonction du nombre de jours entre aujourd’hui et ta date de départ.</li>
               <li><strong>Une probabilité “trajet”</strong> quand il y a assez de données pour ton origine/destination.</li>
-              <li><strong>Un fallback global</strong> si le trajet est rare ou peu observé dans l’historique.</li>
               <li><strong>Le statut du snapshot du jour</strong> (si disponible) : ouvert / fermé aujourd’hui pour ce couple origine-destination et cette date.</li>
             </ul>
           </div>
@@ -226,7 +224,7 @@
               <h3 style="margin:0 0 10px; font-size:18px; letter-spacing:-0.02em;">Pourquoi “trajet introuvable” parfois ?</h3>
               <p class="form__hint" style="margin:0;">
                 Certaines combinaisons origine/destination ne correspondent pas à un trajet réel TGVmax (ou sont trop rares dans l’historique).
-                Dans ce cas, MaxCast t’avertit et peut utiliser un fallback global si pertinent.
+                Dans ce cas, MaxCast t’avertit.
               </p>
             </div>
 
@@ -242,14 +240,14 @@
               <h3 style="margin:0 0 10px; font-size:18px; letter-spacing:-0.02em;">Est-ce que MaxCast stocke mes données ?</h3>
               <p class="form__hint" style="margin:0;">
                 Non : la sélection d’une gare et d’une date sert uniquement à calculer une prédiction côté navigateur.
-                Pour les cookies (intro + consentement), consulte la page mentions légales.
+                Pour les cookies, consulte la page mentions légales.
               </p>
             </div>
 
             <div class="panel" style="box-shadow:none;">
               <h3 style="margin:0 0 10px; font-size:18px; letter-spacing:-0.02em;">Qui est derrière MaxCast ?</h3>
               <p class="form__hint" style="margin:0;">
-                Projet étudiant / perso développé à Centrale Méditerranée.
+                Projet étudiant développé à Centrale Méditerranée.
                 Le site n’est pas affilié à la SNCF.
               </p>
             </div>
