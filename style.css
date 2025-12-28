@@ -694,3 +694,42 @@ code{
 .panel h3 { color: var(--text); }
 .panel.panel--soft .panel { border-color: rgba(229,231,235,.7); background: #fff; }
 .panel.panel--soft .bullets { color: var(--muted); }
+
+
+/* Courbe repliable */
+.chart-collapsible {
+  margin-top: 16px;
+}
+
+.chart-collapsible__summary {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 12px 14px;
+  border-radius: 14px;
+
+  background: rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.chart-collapsible__hint {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* enlève le triangle natif (si tu veux un look plus clean) */
+.chart-collapsible__summary::-webkit-details-marker {
+  display: none;
+}
+.chart-collapsible__summary::marker {
+  content: "";
+}
+
+/* Optionnel : petite animation d’ouverture */
+.chart-collapsible[open] .chart {
+  margin-top: 10px;
+}
