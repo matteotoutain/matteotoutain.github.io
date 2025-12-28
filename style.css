@@ -689,3 +689,7 @@ code{
   pointer-events: none;
   transition: opacity 0.8s ease;
 }
+
+.panel h3 { color: var(--text); }
+.panel.panel--soft .panel { border-color: rgba(229,231,235,.7); background: #fff; }
+.panel.panel--soft .bullets { color: var(--muted); }
