@@ -172,12 +172,18 @@
 
           <div id="warning-box" class="callout callout--warn hidden"></div>
 
-          <div class="chart">
-            <div class="chart__title">Courbe de probabilité (trajet)</div>
-            <div class="chart__box">
-              <canvas id="prob-chart"></canvas>
-            </div>
-          </div>
+<details class="chart-collapsible" id="chart-details">
+  <summary class="chart-collapsible__summary">
+    <span>Courbe de probabilité (trajet)</span>
+    <span class="chart-collapsible__hint">Cliquer pour déplier</span>
+  </summary>
+
+  <div class="chart">
+    <div class="chart__box">
+      <canvas id="prob-chart"></canvas>
+    </div>
+  </div>
+</details>
         </section>
 
         <section class="panel panel--soft">
