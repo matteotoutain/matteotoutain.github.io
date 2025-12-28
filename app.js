@@ -44,6 +44,16 @@ function $(id) {
   return document.getElementById(id);
 }
 
+function showResultsLoading() {
+  $("results-loading")?.style && ($("results-loading").style.display = "");
+  $("results-panel")?.style && ($("results-panel").style.display = "none");
+}
+
+function showResultsPanel() {
+  $("results-loading")?.style && ($("results-loading").style.display = "none");
+  $("results-panel")?.style && ($("results-panel").style.display = "");
+}
+
 // Normalisation robuste (évite mismatch espaces/unicode)
 function normText(s) {
   return (s ?? "")
@@ -275,7 +285,7 @@ function findClosestOdRow(series, delta) {
   return best;
 }
 
-function onComputeClick() {
+async function onComputeClick() {
   const dateStr = $("date-select").value;
   const origin = $("origin-select").value;
   const dest = $("destination-select").value;
@@ -290,6 +300,19 @@ function onComputeClick() {
     return;
   }
 
+  const btn = $("compute-btn");
+if (btn) btn.disabled = true;
+
+  showResultsLoading();
+
+// faux chargement (2.0 à 3.2s)
+const delay = 2000 + Math.floor(Math.random() * 1200);
+await new Promise((r) => setTimeout(r, delay));
+
+showResultsPanel();
+  if (btn) btn.disabled = false;
+
+  
   const key = odKey(origin, dest);
   const delta = computeDeltaDaysFromToday(dateStr);
   $("delta-value").textContent = String(delta);
