@@ -898,3 +898,123 @@ code{
   font-size: 12px;
   opacity: 0.6;
 }
+
+
+/* ===== TUTO OVERLAY ===== */
+.tuto-overlay{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index: 999999; /* au-dessus de tout */
+  padding: 18px;
+}
+
+.tuto-overlay.is-open{ display:flex; }
+
+.tuto-card{
+  width:min(1100px, 96vw);
+  background:#fff;
+  border-radius:22px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+  overflow:hidden;
+  position:relative;
+}
+
+.tuto-skip{
+  position:absolute;
+  top:14px; right:14px;
+  border:1px solid rgba(0,0,0,0.12);
+  background:#fff;
+  padding:10px 14px;
+  border-radius:999px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.tuto-stage{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: #f7f8fb;
+}
+
+.tuto-img{
+  width:100%;
+  height:auto;
+  display:block;
+  max-height: 78vh;
+  object-fit: contain;
+  user-select:none;
+}
+
+.tuto-nav{
+  position:absolute;
+  top:50%;
+  transform: translateY(-50%);
+  width:52px; height:52px;
+  border-radius:999px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.92);
+  cursor:pointer;
+  font-size: 34px;
+  line-height: 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.14);
+}
+
+.tuto-prev{ left:14px; }
+.tuto-next{ right:14px; }
+
+.tuto-nav[disabled]{
+  opacity:0.35;
+  cursor:not-allowed;
+}
+
+.tuto-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 16px;
+}
+
+.tuto-dots{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.tuto-dot{
+  width:10px; height:10px;
+  border-radius:999px;
+  background: rgba(1,17,160,0.18);
+}
+
+.tuto-dot.is-active{
+  width:18px;
+  background: rgba(1,17,160,0.85);
+}
+
+.tuto-finish{
+  border:none;
+  background:#0111a0;
+  color:#fff;
+  padding:12px 16px;
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+@media (max-width: 600px){
+  .tuto-nav{
+    width:44px; height:44px;
+    font-size: 30px;
+  }
+  .tuto-footer{ padding:12px; }
+}
