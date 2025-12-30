@@ -67,6 +67,36 @@
 </head>
 
 <body>
+
+  <!-- ONBOARDING TUTO (overlay) -->
+<div id="tuto-overlay" class="tuto-overlay" aria-hidden="true">
+  <div class="tuto-card" role="dialog" aria-modal="true" aria-label="Tutoriel MaxCast">
+    <button id="tuto-skip" class="tuto-skip" type="button">Passer</button>
+
+    <div class="tuto-stage">
+      <button id="tuto-prev" class="tuto-nav tuto-prev" type="button" aria-label="Slide précédente">‹</button>
+
+      <img
+        id="tuto-img"
+        class="tuto-img"
+        src="assets/slide1.jpg"
+        alt="Tutoriel MaxCast"
+        loading="eager"
+      />
+
+      <button id="tuto-next" class="tuto-nav tuto-next" type="button" aria-label="Slide suivante">›</button>
+    </div>
+
+    <div class="tuto-footer">
+      <div id="tuto-dots" class="tuto-dots" aria-label="Progression"></div>
+
+      <button id="tuto-finish" class="tuto-finish" type="button" style="display:none;">
+        C’est parti !
+      </button>
+    </div>
+  </div>
+</div>
+  
   <!-- INTRO -->
   <div class="intro" id="intro">
     <div class="intro-container">
@@ -412,6 +442,146 @@
         method === 1 ? "CSS bait" : "URL"
       );
     }, true);
+  });
+</script>
+  <script>
+  // ===== TUTO ONBOARDING =====
+  const TUTO_COOKIE = "maxcast_tuto_done";
+  const TUTO_MAX_AGE_DAYS = 180;
+
+  // ⚠️ Mets ici les vrais chemins
+  const TUTO_SLIDES = [
+    "assets/tuto/slide0.jpg", // Bienvenue
+    "assets/tuto/slide1.jpg", // Sélectionne ton trajet
+    "assets/tuto/slide2.jpg", // Lance la prévision
+    "assets/tuto/slide3.jpg"  // Découvre tes chances
+  ];
+
+  function getCookie(name){
+    return document.cookie
+      .split(";")
+      .map(c => c.trim())
+      .find(c => c.startsWith(name + "="))
+      ?.split("=")[1];
+  }
+
+  function setCookie(name, value, maxAgeSeconds){
+    document.cookie = `${name}=${value}; max-age=${maxAgeSeconds}; path=/; SameSite=Lax`;
+  }
+
+  function markTutoDone(){
+    setCookie(TUTO_COOKIE, "true", TUTO_MAX_AGE_DAYS * 24 * 60 * 60);
+  }
+
+  function waitForIntroToFinish(cb){
+    // Ton intro ajoute body.loaded quand c’est ok
+    const maxWaitMs = 12000;
+    const start = Date.now();
+    const t = setInterval(() => {
+      const loaded = document.body.classList.contains("loaded");
+      const introGone = !document.getElementById("intro");
+      if (loaded || introGone){
+        clearInterval(t);
+        cb();
+      } else if (Date.now() - start > maxWaitMs){
+        clearInterval(t);
+        cb();
+      }
+    }, 120);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const overlay = document.getElementById("tuto-overlay");
+    const img = document.getElementById("tuto-img");
+    const prevBtn = document.getElementById("tuto-prev");
+    const nextBtn = document.getElementById("tuto-next");
+    const finishBtn = document.getElementById("tuto-finish");
+    const skipBtn = document.getElementById("tuto-skip");
+    const dotsWrap = document.getElementById("tuto-dots");
+
+    if (!overlay || !img || !prevBtn || !nextBtn || !finishBtn || !skipBtn || !dotsWrap) return;
+
+    // Déjà fait => ne pas montrer
+    if (getCookie(TUTO_COOKIE) === "true") return;
+
+    let i = 0;
+
+    function renderDots(){
+      dotsWrap.innerHTML = "";
+      for (let k = 0; k < TUTO_SLIDES.length; k++){
+        const d = document.createElement("div");
+        d.className = "tuto-dot" + (k === i ? " is-active" : "");
+        dotsWrap.appendChild(d);
+      }
+    }
+
+    function render(){
+      img.src = TUTO_SLIDES[i];
+      prevBtn.disabled = (i === 0);
+      nextBtn.disabled = (i === TUTO_SLIDES.length - 1);
+
+      // "C'est parti !" uniquement à la dernière slide
+      finishBtn.style.display = (i === TUTO_SLIDES.length - 1) ? "inline-flex" : "none";
+
+      renderDots();
+    }
+
+    function open(){
+      overlay.classList.add("is-open");
+      overlay.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      render();
+    }
+
+    function close(done){
+      overlay.classList.remove("is-open");
+      overlay.setAttribute("aria-hidden", "true");
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      if (done) markTutoDone();
+    }
+
+    function next(){
+      if (i < TUTO_SLIDES.length - 1){
+        i++;
+        render();
+      }
+    }
+
+    function prev(){
+      if (i > 0){
+        i--;
+        render();
+      }
+    }
+
+    // Actions
+    nextBtn.addEventListener("click", next);
+    prevBtn.addEventListener("click", prev);
+
+    skipBtn.addEventListener("click", () => close(true));
+    finishBtn.addEventListener("click", () => close(true));
+
+    // Click dehors = on ferme + cookie (considéré comme terminé)
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) close(true);
+    });
+
+    // Clavier
+    document.addEventListener("keydown", (e) => {
+      if (!overlay.classList.contains("is-open")) return;
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "Escape") close(true);
+    });
+
+    // On attend la fin de ton intro avant d’afficher
+    waitForIntroToFinish(() => {
+      // Si un overlay adblock est présent, ne pas empiler (optionnel)
+      if (document.getElementById("adblock-overlay")) return;
+      open();
+    });
   });
 </script>
 </body>
