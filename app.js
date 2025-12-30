@@ -142,8 +142,9 @@ function updateMetadataLine() {
   const nOd = metaData.n_rows_proba_od || "n.c.";
 
   el.textContent =
-    `Généré le ${genAt} • ${nRaw} lignes brutes • ${nEnriched} enrichies • ` +
-    `${nStations} gares • ${nOd} OD`;
+    // `Généré le ${genAt} • ${nRaw} lignes brutes • ${nEnriched} enrichies • ` +
+    //`${nStations} gares • ${nOd} OD`;
+    `Mis à jour le ${genAt}`;
 }
 
 // ===== 5. Parsing CSV simple ============================================
