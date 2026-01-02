@@ -74,19 +74,17 @@
 
 
     <div class="tuto-stage">
-      <button id="tuto-skip" class="tuto-skip" type="button">Passer</button>
-      <button id="tuto-prev" class="tuto-nav tuto-prev" type="button" aria-label="Slide précédente">‹</button>
+  <button id="tuto-skip" class="tuto-skip" type="button">Passer</button>
+  <button id="tuto-prev" class="tuto-nav tuto-prev" type="button" aria-label="Slide précédente">‹</button>
 
-      <img
-        id="tuto-img"
-        class="tuto-img"
-        src="assets/slide1.png"
-        alt="Tutoriel MaxCast"
-        loading="eager"
-      />
-
-      <button id="tuto-next" class="tuto-nav tuto-next" type="button" aria-label="Slide suivante">›</button>
+  <div class="tuto-viewport">
+    <div id="tuto-track" class="tuto-track">
+      <!-- Slides injectées en JS -->
     </div>
+  </div>
+
+  <button id="tuto-next" class="tuto-nav tuto-next" type="button" aria-label="Slide suivante">›</button>
+</div>
 
     <div class="tuto-footer">
       <div id="tuto-dots" class="tuto-dots" aria-label="Progression"></div>
@@ -438,17 +436,16 @@
     }, true);
   });
 </script>
-  <script>
+<script>
   // ===== TUTO ONBOARDING =====
   const TUTO_COOKIE = "maxcast_tuto_done";
   const TUTO_MAX_AGE_DAYS = 180;
 
-  // ⚠️ Mets ici les vrais chemins
   const TUTO_SLIDES = [
-    "assets/slide1.png", // Bienvenue
-    "assets/slide2.png", // Sélectionne ton trajet
-    "assets/slide3.png", // Lance la prévision
-    "assets/slide4.png"  // Découvre tes chances
+    "assets/slide1.png",
+    "assets/slide2.png",
+    "assets/slide3.png",
+    "assets/slide4.png"
   ];
 
   function getCookie(name){
@@ -468,7 +465,6 @@
   }
 
   function waitForIntroToFinish(cb){
-    // Ton intro ajoute body.loaded quand c’est ok
     const maxWaitMs = 12000;
     const start = Date.now();
     const t = setInterval(() => {
@@ -486,19 +482,29 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     const overlay = document.getElementById("tuto-overlay");
-    const img = document.getElementById("tuto-img");
+    const track = document.getElementById("tuto-track");
     const prevBtn = document.getElementById("tuto-prev");
     const nextBtn = document.getElementById("tuto-next");
     const finishBtn = document.getElementById("tuto-finish");
     const skipBtn = document.getElementById("tuto-skip");
     const dotsWrap = document.getElementById("tuto-dots");
 
-    if (!overlay || !img || !prevBtn || !nextBtn || !finishBtn || !skipBtn || !dotsWrap) return;
+    if (!overlay || !track || !prevBtn || !nextBtn || !finishBtn || !skipBtn || !dotsWrap) return;
 
     // Déjà fait => ne pas montrer
     if (getCookie(TUTO_COOKIE) === "true") return;
 
     let i = 0;
+
+    function buildSlides(){
+      track.innerHTML = "";
+      for (const src of TUTO_SLIDES){
+        const slide = document.createElement("div");
+        slide.className = "tuto-slide";
+        slide.innerHTML = `<img src="${src}" alt="Tutoriel MaxCast" loading="eager" />`;
+        track.appendChild(slide);
+      }
+    }
 
     function renderDots(){
       dotsWrap.innerHTML = "";
@@ -510,21 +516,24 @@
     }
 
     function render(){
-      img.src = TUTO_SLIDES[i];
+      track.style.transform = `translateX(-${i * 100}%)`;
+
       prevBtn.disabled = (i === 0);
       nextBtn.disabled = (i === TUTO_SLIDES.length - 1);
 
-      // "C'est parti !" uniquement à la dernière slide
       finishBtn.style.display = (i === TUTO_SLIDES.length - 1) ? "inline-flex" : "none";
 
       renderDots();
     }
 
     function open(){
+      buildSlides();
+
       overlay.classList.add("is-open");
       overlay.setAttribute("aria-hidden", "false");
       document.documentElement.style.overflow = "hidden";
       document.body.style.overflow = "hidden";
+
       render();
     }
 
@@ -550,14 +559,14 @@
       }
     }
 
-    // Actions
+    // Actions boutons
     nextBtn.addEventListener("click", next);
     prevBtn.addEventListener("click", prev);
 
     skipBtn.addEventListener("click", () => close(true));
     finishBtn.addEventListener("click", () => close(true));
 
-    // Click dehors = on ferme + cookie (considéré comme terminé)
+    // Click dehors = on ferme + cookie
     overlay.addEventListener("click", (e) => {
       if (e.target === overlay) close(true);
     });
@@ -570,9 +579,43 @@
       if (e.key === "Escape") close(true);
     });
 
+    // ===== BONUS : swipe mobile (trackpad friendly) =====
+    let startX = null;
+    let startY = null;
+
+    overlay.addEventListener("touchstart", (e) => {
+      if (!overlay.classList.contains("is-open")) return;
+      if (!e.touches || e.touches.length !== 1) return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    overlay.addEventListener("touchend", (e) => {
+      if (!overlay.classList.contains("is-open")) return;
+      if (startX === null || startY === null) return;
+      if (!e.changedTouches || e.changedTouches.length !== 1) return;
+
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+
+      const dx = endX - startX;
+      const dy = endY - startY;
+
+      startX = null;
+      startY = null;
+
+      // ignore si c'est plutôt un scroll vertical
+      if (Math.abs(dy) > Math.abs(dx)) return;
+
+      // seuil
+      if (Math.abs(dx) < 40) return;
+
+      if (dx < 0) next();
+      else prev();
+    }, { passive: true });
+
     // On attend la fin de ton intro avant d’afficher
     waitForIntroToFinish(() => {
-      // Si un overlay adblock est présent, ne pas empiler (optionnel)
       if (document.getElementById("adblock-overlay")) return;
       open();
     });
