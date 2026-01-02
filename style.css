@@ -900,7 +900,7 @@ code{
 }
 
 
-/* ===== TUTO OVERLAY (FINAL) ===== */
+/* ===== TUTO OVERLAY (CARD ARRONDIE + ZERO BORDURES + BOUTONS OK) ===== */
 .tuto-overlay{
   position:fixed;
   inset:0;
@@ -911,34 +911,33 @@ code{
   align-items:center;
   justify-content:center;
 
-  z-index: 999999; /* au-dessus de tout */
-  padding: 0;      /* ✅ plus de "cadre" */
+  z-index: 999999;
+  padding: 18px; /* ✅ marge autour de la card */
 }
 
 .tuto-overlay.is-open{ display:flex; }
 
-/* Card full-bleed */
+/* ✅ Card arrondie comme avant */
 .tuto-card{
-  width: 100vw;
-  height: 100vh;
-  background: transparent; /* ✅ pas de bordure blanche */
-  border-radius: 0;        /* ✅ pas d’arrondi qui crée un cadre */
-  box-shadow: none;        /* ✅ pas d’ombre */
-  overflow: hidden;
-  position: relative;
+  width: min(1100px, 96vw);
+  height: min(78vh, 720px); /* ✅ card, pas plein écran */
+  background:#fff;
+  border-radius:22px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+  overflow:hidden;          /* ✅ arrondi effectif sur l'image */
+  position:relative;
 }
 
-/* Bouton Passer toujours visible */
+/* ✅ bouton Passer visible */
 .tuto-skip{
   position:absolute;
   top:14px;
   right:14px;
-  z-index: 999;           /* ✅ au-dessus de tout */
-  pointer-events: auto;   /* ✅ cliquable */
+  z-index: 50;            /* ✅ au-dessus de l'image */
+  pointer-events: auto;
 
-  border:1px solid rgba(255,255,255,0.30);
-  background: rgba(0,0,0,0.35);
-  color:#fff;
+  border:1px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.92);
   padding:10px 14px;
   border-radius:999px;
   font-weight:700;
@@ -946,25 +945,25 @@ code{
   backdrop-filter: blur(6px);
 }
 
-/* Zone slide */
+/* Zone image */
 .tuto-stage{
   position:relative;
   width:100%;
-  height:100%;
+  height: calc(100% - 64px); /* ✅ réserve la place footer */
   display:flex;
   align-items:center;
   justify-content:center;
-  background: transparent;
-  z-index: 1; /* en dessous des boutons */
+  background:#fff;
+  z-index: 1;
 }
 
-/* Viewport + track (pour slider) */
+/* ✅ IMPORTANT : si tu fais du swipe, il faut un viewport + track.
+   Si tu n'as pas encore ces divs, ça ne casse rien, mais le swipe ne s'appliquera pas. */
 .tuto-viewport{
   width:100%;
   height:100%;
   overflow:hidden;
-  background: transparent;
-  touch-action: pan-y; /* ✅ swipe horizontal sans flinguer le scroll vertical du navigateur */
+  touch-action: pan-y; /* ✅ autorise swipe horizontal */
 }
 
 .tuto-track{
@@ -978,47 +977,42 @@ code{
 
 .tuto-slide{
   flex: 0 0 100%;
-  width: 100%;
-  height: 100%;
-  position: relative;
+  width:100%;
+  height:100%;
 }
 
-/* ✅ Full bleed : zéro bandes, images collées */
+/* ✅ ZERO bandes à gauche/droite : l'image remplit la zone */
+.tuto-img,
 .tuto-slide img{
-  width: 100%;
-  height: 100%;
+  width:100%;
+  height:100%;
   display:block;
-  object-fit: cover;   /* ✅ plus de bordures latérales */
+  object-fit: fill;     /* ✅ colle pixel à pixel : pas de bordures */
   user-select:none;
   -webkit-user-drag: none;
-  pointer-events: none; /* ✅ évite de "capturer" les clics/glisser */
 }
 
-/* Flèches au-dessus et cliquables */
+/* Flèches : toujours au-dessus et cliquables */
 .tuto-nav{
   position:absolute;
   top:50%;
   transform: translateY(-50%);
-  z-index: 999;          /* ✅ au-dessus du track */
-  pointer-events: auto;  /* ✅ cliquable */
+  z-index: 50;          /* ✅ au-dessus de l'image */
+  pointer-events: auto;
 
   width:52px;
   height:52px;
   border-radius:999px;
-
-  border:1px solid rgba(255,255,255,0.30);
-  background: rgba(0,0,0,0.35);
-  color:#fff;
-
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.92);
   cursor:pointer;
+
   font-size: 34px;
   line-height: 0;
-
   display:flex;
   align-items:center;
   justify-content:center;
-
-  backdrop-filter: blur(6px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.14);
 }
 
 .tuto-prev{ left:14px; }
@@ -1029,22 +1023,20 @@ code{
   cursor:not-allowed;
 }
 
-/* Footer en overlay (ne réduit pas la hauteur image) */
+/* Footer : en bas, dans la card */
 .tuto-footer{
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  z-index: 999; /* ✅ au-dessus de l’image */
-
+  height: 64px;
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:16px;
 
   padding:14px 16px;
-  background: linear-gradient(to top, rgba(0,0,0,0.60), rgba(0,0,0,0));
-  color:#fff;
+  background:#fff;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  position:absolute;
+  left:0; right:0; bottom:0;
+  z-index: 10;
 }
 
 .tuto-dots{
@@ -1054,45 +1046,44 @@ code{
 }
 
 .tuto-dot{
-  width:10px;
-  height:10px;
+  width:10px; height:10px;
   border-radius:999px;
-  background: rgba(255,255,255,0.35);
+  background: rgba(1,17,160,0.18);
 }
 
 .tuto-dot.is-active{
   width:18px;
-  background: rgba(255,255,255,0.95);
+  background: rgba(1,17,160,0.85);
 }
 
 .tuto-finish{
   border:none;
-  background:#fff;
-  color:#000;
+  background:#0111a0;
+  color:#fff;
   padding:12px 16px;
   border-radius:12px;
   font-weight:900;
   cursor:pointer;
 }
 
-/* Mobile tweaks */
+/* Mobile */
 @media (max-width: 600px){
+  .tuto-card{
+    width: 96vw;
+    height: min(82vh, 680px);
+    border-radius:18px;
+  }
   .tuto-nav{
-    width:44px;
-    height:44px;
+    width:44px; height:44px;
     font-size: 30px;
   }
-  .tuto-skip{
-    top:12px;
-    right:12px;
-    padding:9px 12px;
-  }
   .tuto-footer{
-    padding: 12px 12px;
+    height: 60px;
+    padding:12px 12px;
   }
 }
 
-/* Accessibilité */
+/* Réduction animations */
 @media (prefers-reduced-motion: reduce){
   .tuto-track{ transition:none !important; }
 }
