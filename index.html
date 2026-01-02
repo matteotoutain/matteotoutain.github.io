@@ -144,28 +144,39 @@
 
           <div class="form">
             <div class="field">
-              <label for="origin-select">Gare de départ</label>
-              <div class="control">
-                <select id="origin-select">
-                  <option value="">— Sélectionnez une gare —</option>
-                </select>
-              </div>
-            </div>
+  <label for="origin-input">Gare de départ</label>
+  <div class="control">
+    <input
+      id="origin-input"
+      type="text"
+      placeholder="Tape une gare…"
+      autocomplete="off"
+      list="stations-datalist"
+    />
+  </div>
+</div>
 
-            <div class="switch-wrap" aria-hidden="false">
-              <button id="swap-btn" type="button" class="swap-btn" title="Inverser départ / arrivée" aria-label="Inverser départ et arrivée">
-                ⇄
-              </button>
-            </div>
+<div class="switch-wrap" aria-hidden="false">
+  <button id="swap-btn" type="button" class="swap-btn" title="Inverser départ / arrivée" aria-label="Inverser départ et arrivée">
+    ⇄
+  </button>
+</div>
 
-            <div class="field">
-              <label for="destination-select">Gare d’arrivée</label>
-              <div class="control">
-                <select id="destination-select">
-                  <option value="">— Sélectionnez une gare —</option>
-                </select>
-              </div>
-            </div>
+<div class="field">
+  <label for="destination-input">Gare d’arrivée</label>
+  <div class="control">
+    <input
+      id="destination-input"
+      type="text"
+      placeholder="Tape une gare…"
+      autocomplete="off"
+      list="stations-datalist"
+    />
+  </div>
+</div>
+
+<!-- Datalist partagé (une seule liste pour les deux champs) -->
+<datalist id="stations-datalist"></datalist>
 
             <div class="field field--full">
               <div class="label-row">
