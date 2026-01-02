@@ -82,6 +82,15 @@ function normText(s) {
     .trim();
 }
 
+function getMaxProba(series) {
+  if (!series || !series.length) return null;
+  let best = series[0];
+  for (const r of series) {
+    if (r.proba_open > best.proba_open) best = r;
+  }
+  return best;
+}
+
 function normStation(s) {
   // Si tu veux forcer en MAJ : return normText(s).toUpperCase();
   return normText(s);
@@ -401,8 +410,21 @@ async function onComputeClick() {
 
   // 2) proba OD uniquement
   const series = odByKey[key] || [];
-  const odRow = findClosestOdRow(series, delta);
-  const odProb = odRow ? odRow.proba_open : null;
+
+  let odRow = null;
+  let odProb = null;
+
+  if (series.length) {
+  // règle KPI :
+  // - si delta ∈ [0;30] => closest
+  // - sinon => max sur [0;30]
+    if (delta < 0 || delta > 30) {
+      odRow = getMaxProba(series);
+    } else {
+      odRow = findClosestOdRow(series, delta);
+    }
+    odProb = odRow ? odRow.proba_open : null;
+  }
 
   if (odProb == null) {
     const pv = $("probability-value");
