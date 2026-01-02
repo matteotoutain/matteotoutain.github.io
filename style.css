@@ -909,7 +909,7 @@ code{
   align-items:center;
   justify-content:center;
   z-index:999999;
-  padding:18px;
+  padding: 20%;
 }
 .tuto-overlay.is-open{ display:flex; }
 
@@ -1004,6 +1004,12 @@ code{
   padding:14px 16px;
   border-top:1px solid rgba(0,0,0,0.06);
   background:#fff;
+}
+
+.tuto-dots{
+  display:flex;
+  gap:8px;
+  align-items:center;
 }
 
 .tuto-dot{
