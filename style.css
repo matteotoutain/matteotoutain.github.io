@@ -1036,3 +1036,7 @@ code{
   .tuto-card{ border-radius:18px; }
   .tuto-nav{ width:44px;height:44px;font-size:28px; }
 }
+
+.control input[type="text"]{
+  width: 100%;
+}
