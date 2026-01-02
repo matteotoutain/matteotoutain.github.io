@@ -1,0 +1,38 @@
+name: Update ads.txt (Ezoic)
+
+on:
+  schedule:
+    - cron: "17 3 * * *" # tous les jours à 03:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch latest ads.txt from Ezoic
+        run: |
+          curl -L "https://srv.adstxtmanager.com/19390/TON_DOMAINE.com" -o ads.txt.new
+          # Remplace seulement si ça change
+          if ! cmp -s ads.txt.new ads.txt; then
+            mv ads.txt.new ads.txt
+          else
+            rm ads.txt.new
+          fi
+
+      - name: Commit & push if changed
+        run: |
+          if git status --porcelain | grep -q "ads.txt"; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add ads.txt
+            git commit -m "chore: update ads.txt (Ezoic)"
+            git push
+          else
+            echo "No changes"
+          fi
