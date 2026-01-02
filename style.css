@@ -1037,6 +1037,56 @@ code{
   .tuto-nav{ width:44px;height:44px;font-size:28px; }
 }
 
-.control input[type="text"]{
+/* ===== Inputs texte (recherche gare) : même style que select/date ===== */
+.control input[type="text"],
+.control input[list]{
   width: 100%;
+  padding: 14px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #f3f4f6;
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+  transition: box-shadow .15s ease, border-color .15s ease, transform .05s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.control input[type="text"]::placeholder,
+.control input[list]::placeholder{
+  color: var(--muted2);
+}
+
+.control input[type="text"]:focus,
+.control input[list]:focus{
+  box-shadow: var(--focus);
+  border-color: #cbd5e1;
+}
+
+.control input[type="text"]:active,
+.control input[list]:active{
+  transform: translateY(1px);
+}
+
+/* Optionnel mais propre : même hauteur de ligne partout */
+.control select,
+.control input[type="date"],
+.control input[type="text"],
+.control input[list]{
+  line-height: 1.2;
+}
+
+/* Le bouton swap doit s’aligner au milieu des inputs (pas en bas) */
+.switch-wrap{
+  align-items: center;
+}
+
+/* Mobile: bouton swap centré aussi */
+@media (max-width: 720px){
+  .switch-wrap{
+    justify-content: center;
+    margin-top: -6px; /* petit ajustement visuel (optionnel) */
+    margin-bottom: -2px;
+  }
 }
