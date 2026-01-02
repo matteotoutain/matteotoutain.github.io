@@ -900,64 +900,125 @@ code{
 }
 
 
-/* ===== TUTO OVERLAY ===== */
+/* ===== TUTO OVERLAY (FINAL) ===== */
 .tuto-overlay{
-  position:fixed; inset:0;
+  position:fixed;
+  inset:0;
   background:rgba(0,0,0,0.55);
   backdrop-filter: blur(6px);
+
   display:none;
   align-items:center;
   justify-content:center;
+
   z-index: 999999; /* au-dessus de tout */
-  padding: 18px;
+  padding: 0;      /* ✅ plus de "cadre" */
 }
 
 .tuto-overlay.is-open{ display:flex; }
 
+/* Card full-bleed */
 .tuto-card{
-  width:min(1100px, 96vw);
-  background:#fff;
-  border-radius:22px;
-  box-shadow: 0 30px 80px rgba(0,0,0,0.35);
-  overflow:hidden;
-  position:relative;
+  width: 100vw;
+  height: 100vh;
+  background: transparent; /* ✅ pas de bordure blanche */
+  border-radius: 0;        /* ✅ pas d’arrondi qui crée un cadre */
+  box-shadow: none;        /* ✅ pas d’ombre */
+  overflow: hidden;
+  position: relative;
 }
 
+/* Bouton Passer toujours visible */
 .tuto-skip{
   position:absolute;
-  top:14px; right:14px;
-  border:1px solid rgba(0,0,0,0.12);
-  background:#fff;
+  top:14px;
+  right:14px;
+  z-index: 999;           /* ✅ au-dessus de tout */
+  pointer-events: auto;   /* ✅ cliquable */
+
+  border:1px solid rgba(255,255,255,0.30);
+  background: rgba(0,0,0,0.35);
+  color:#fff;
   padding:10px 14px;
   border-radius:999px;
-  font-weight:600;
+  font-weight:700;
   cursor:pointer;
+  backdrop-filter: blur(6px);
 }
 
+/* Zone slide */
 .tuto-stage{
   position:relative;
+  width:100%;
+  height:100%;
   display:flex;
   align-items:center;
   justify-content:center;
-  background: #fff;
+  background: transparent;
+  z-index: 1; /* en dessous des boutons */
 }
 
+/* Viewport + track (pour slider) */
+.tuto-viewport{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background: transparent;
+  touch-action: pan-y; /* ✅ swipe horizontal sans flinguer le scroll vertical du navigateur */
+}
 
+.tuto-track{
+  display:flex;
+  width:100%;
+  height:100%;
+  transform: translateX(0);
+  transition: transform 420ms cubic-bezier(.2,.9,.2,1);
+  will-change: transform;
+}
+
+.tuto-slide{
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* ✅ Full bleed : zéro bandes, images collées */
+.tuto-slide img{
+  width: 100%;
+  height: 100%;
+  display:block;
+  object-fit: cover;   /* ✅ plus de bordures latérales */
+  user-select:none;
+  -webkit-user-drag: none;
+  pointer-events: none; /* ✅ évite de "capturer" les clics/glisser */
+}
+
+/* Flèches au-dessus et cliquables */
 .tuto-nav{
   position:absolute;
   top:50%;
   transform: translateY(-50%);
-  width:52px; height:52px;
+  z-index: 999;          /* ✅ au-dessus du track */
+  pointer-events: auto;  /* ✅ cliquable */
+
+  width:52px;
+  height:52px;
   border-radius:999px;
-  border: 1px solid rgba(0,0,0,0.12);
-  background: rgba(255,255,255,0.92);
+
+  border:1px solid rgba(255,255,255,0.30);
+  background: rgba(0,0,0,0.35);
+  color:#fff;
+
   cursor:pointer;
   font-size: 34px;
   line-height: 0;
+
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.14);
+
+  backdrop-filter: blur(6px);
 }
 
 .tuto-prev{ left:14px; }
@@ -968,12 +1029,22 @@ code{
   cursor:not-allowed;
 }
 
+/* Footer en overlay (ne réduit pas la hauteur image) */
 .tuto-footer{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index: 999; /* ✅ au-dessus de l’image */
+
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:16px;
+
   padding:14px 16px;
+  background: linear-gradient(to top, rgba(0,0,0,0.60), rgba(0,0,0,0));
+  color:#fff;
 }
 
 .tuto-dots{
@@ -983,70 +1054,45 @@ code{
 }
 
 .tuto-dot{
-  width:10px; height:10px;
+  width:10px;
+  height:10px;
   border-radius:999px;
-  background: rgba(1,17,160,0.18);
+  background: rgba(255,255,255,0.35);
 }
 
 .tuto-dot.is-active{
   width:18px;
-  background: rgba(1,17,160,0.85);
+  background: rgba(255,255,255,0.95);
 }
 
 .tuto-finish{
   border:none;
-  background:#0111a0;
-  color:#fff;
+  background:#fff;
+  color:#000;
   padding:12px 16px;
   border-radius:12px;
-  font-weight:800;
+  font-weight:900;
   cursor:pointer;
 }
 
-/* ===== TUTO SLIDE (carousel) ===== */
-.tuto-viewport{
-  width:100%;
-  overflow:hidden;
-  background:#fff;
-}
-
-.tuto-track{
-  display:flex;
-  width:100%;
-  transform: translateX(0%);
-  transition: transform 420ms cubic-bezier(.2, .9, .2, 1);
-  will-change: transform;
-}
-
-.tuto-slide{
-  flex: 0 0 100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#fff;
-}
-
-.tuto-slide img{
-  width:100%;
-  height:auto;
-  display:block;
-  max-height: 78vh;
-  object-fit: contain;
-  user-select:none;
-}
-
-@media (prefers-reduced-motion: reduce){
-  .tuto-track{ transition:none !important; }
-}
-
-.tuto-stage, .tuto-viewport{
-  touch-action: pan-y;
-}
-
+/* Mobile tweaks */
 @media (max-width: 600px){
   .tuto-nav{
-    width:44px; height:44px;
+    width:44px;
+    height:44px;
     font-size: 30px;
   }
-  .tuto-footer{ padding:12px; }
+  .tuto-skip{
+    top:12px;
+    right:12px;
+    padding:9px 12px;
+  }
+  .tuto-footer{
+    padding: 12px 12px;
+  }
+}
+
+/* Accessibilité */
+@media (prefers-reduced-motion: reduce){
+  .tuto-track{ transition:none !important; }
 }
