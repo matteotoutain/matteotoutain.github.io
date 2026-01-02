@@ -87,6 +87,19 @@ function normStation(s) {
   return normText(s);
 }
 
+function getSelectedStationValue(inputEl) {
+  const v = normStation(inputEl?.value);
+  if (!v) return "";
+
+  // match exact
+  if (stations.includes(v)) return v;
+
+  // match insensible à la casse (au cas où)
+  const lower = v.toLowerCase();
+  const found = (stations || []).find((s) => normStation(s).toLowerCase() === lower);
+  return found ? normStation(found) : "";
+}
+
 function odKey(origin, destination) {
   return `${normStation(origin)}||${normStation(destination)}`;
 }
@@ -276,27 +289,27 @@ function buildFirstSignalIndex(raw) {
 // ===== 7. Stations & date ===============================================
 
 function populateStations() {
-  const originSelect = $("origin-select");
-  const destSelect = $("destination-select");
-  if (!originSelect || !destSelect) return;
+  // nouveaux inputs
+  const originInput = $("origin-input");
+  const destInput = $("destination-input");
+  const dl = document.getElementById("stations-datalist");
 
-  originSelect.innerHTML = '<option value="">— Sélectionnez une gare —</option>';
-  destSelect.innerHTML = '<option value="">— Sélectionnez une gare —</option>';
+  // si tu n’as pas encore remplacé le HTML, on sort (évite crash)
+  if (!originInput || !destInput || !dl) return;
+
+  dl.innerHTML = "";
 
   if (!Array.isArray(stations) || !stations.length) return;
 
-  stations.forEach((name) => {
-    const v = normStation(name);
+  // normalisation + dédoublonnage + tri (sinon datalist peut être lourd et bordélique)
+  const clean = Array.from(
+    new Set(stations.map((s) => normStation(s)).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b, "fr"));
 
-    const o = document.createElement("option");
-    o.value = v;
-    o.textContent = name;
-    originSelect.appendChild(o);
-
-    const d = document.createElement("option");
-    d.value = v;
-    d.textContent = name;
-    destSelect.appendChild(d);
+  clean.forEach((v) => {
+    const opt = document.createElement("option");
+    opt.value = v; // valeur injectée quand l'utilisateur clique une suggestion
+    dl.appendChild(opt);
   });
 }
 
@@ -355,8 +368,8 @@ function buildFirstSignalHintHTML(dateStr, delta, key, minD, maxD) {
 
 async function onComputeClick() {
   const dateStr = $("date-select")?.value;
-  const origin = $("origin-select")?.value;
-  const dest = $("destination-select")?.value;
+  const origin = getSelectedStationValue($("origin-input"));
+  const dest = getSelectedStationValue($("destination-input"));
 
   resetMessages();
 
@@ -586,8 +599,8 @@ function showWarning(html) {
 }
 
 function swapStations() {
-  const o = $("origin-select");
-  const d = $("destination-select");
+  const o = $("origin-input");
+  const d = $("destination-input");
   if (!o || !d) return;
 
   const tmp = o.value;
