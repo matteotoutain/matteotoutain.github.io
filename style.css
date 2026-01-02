@@ -942,14 +942,6 @@ code{
   background: #fff;
 }
 
-.tuto-img{
-  width:100%;
-  height:auto;
-  display:block;
-  max-height: 78vh;
-  object-fit: contain;
-  user-select:none;
-}
 
 .tuto-nav{
   position:absolute;
@@ -1009,6 +1001,46 @@ code{
   border-radius:12px;
   font-weight:800;
   cursor:pointer;
+}
+
+/* ===== TUTO SLIDE (carousel) ===== */
+.tuto-viewport{
+  width:100%;
+  overflow:hidden;
+  background:#fff;
+}
+
+.tuto-track{
+  display:flex;
+  width:100%;
+  transform: translateX(0%);
+  transition: transform 420ms cubic-bezier(.2, .9, .2, 1);
+  will-change: transform;
+}
+
+.tuto-slide{
+  flex: 0 0 100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+}
+
+.tuto-slide img{
+  width:100%;
+  height:auto;
+  display:block;
+  max-height: 78vh;
+  object-fit: contain;
+  user-select:none;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .tuto-track{ transition:none !important; }
+}
+
+.tuto-stage, .tuto-viewport{
+  touch-action: pan-y;
 }
 
 @media (max-width: 600px){
