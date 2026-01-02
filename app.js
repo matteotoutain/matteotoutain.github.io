@@ -139,7 +139,7 @@ async function loadAll() {
       updateMetadataLine();
     } else {
       const ml = $("meta-line");
-      if (ml) ml.textContent = "Métadonnées non disponibles.";
+      if (ml) ml.textContent = "Infos de mise à jour indisponibles.";
     }
 
     // stations.json
@@ -165,9 +165,7 @@ async function loadAll() {
       const snapRaw = parseCSV(snapText);
       buildSnapshotIndex(snapRaw);
     } else {
-      console.warn(
-        "snapshot_today_od.csv non disponible => bandeau 'dispo' restera 'inconnu'."
-      );
+      console.warn("snapshot_today_od.csv non disponible => statut du jour inconnu.");
     }
 
     // first_signal_od.csv
@@ -180,12 +178,10 @@ async function loadAll() {
     }
 
     prefillDateToday();
-    setStatus("Données chargées, sélectionne un trajet.", "neutral");
+    setStatus("C’est prêt ✅ Choisis ta date et ton trajet, puis lance le calcul.", "neutral");
   } catch (e) {
     console.error(e);
-    showFatalError(
-      "Erreur de chargement des données. Vérifie les fichiers pré-calculés."
-    );
+    showFatalError("Oups… impossible de charger les données. Réessaie dans un instant.");
   }
 }
 
@@ -194,11 +190,11 @@ function updateMetadataLine() {
   if (!el) return;
 
   if (!metaData) {
-    el.textContent = "Métadonnées non disponibles.";
+    el.textContent = "Infos de mise à jour indisponibles.";
     return;
   }
   const genAt = metaData.generated_at_utc || "n.c.";
-  el.textContent = `Mis à jour le ${genAt}`;
+  el.textContent = `Dernière mise à jour : ${genAt}`;
 }
 
 // ===== 5. Parsing CSV simple ============================================
@@ -228,7 +224,7 @@ function parseCSV(text) {
   return rows;
 }
 
-// ===== 6. Indexation OD & snapshot & first_signal ========================
+// ===== 6. Indexation (trajet + statut du jour + indice "premier signal") ==
 
 function buildOdIndex(odRaw) {
   odByKey = {};
@@ -298,26 +294,25 @@ function buildFirstSignalIndex(raw) {
 // ===== 7. Stations & date ===============================================
 
 function populateStations() {
-  // nouveaux inputs
   const originInput = $("origin-input");
   const destInput = $("destination-input");
   const dl = document.getElementById("stations-datalist");
 
-  // si tu n’as pas encore remplacé le HTML, on sort (évite crash)
+  // si le HTML n’est pas prêt, on sort sans crash
   if (!originInput || !destInput || !dl) return;
 
   dl.innerHTML = "";
 
   if (!Array.isArray(stations) || !stations.length) return;
 
-  // normalisation + dédoublonnage + tri (sinon datalist peut être lourd et bordélique)
-  const clean = Array.from(
-    new Set(stations.map((s) => normStation(s)).filter(Boolean))
-  ).sort((a, b) => a.localeCompare(b, "fr"));
+  // normalisation + dédoublonnage + tri
+  const clean = Array.from(new Set(stations.map((s) => normStation(s)).filter(Boolean))).sort(
+    (a, b) => a.localeCompare(b, "fr")
+  );
 
   clean.forEach((v) => {
     const opt = document.createElement("option");
-    opt.value = v; // valeur injectée quand l'utilisateur clique une suggestion
+    opt.value = v;
     dl.appendChild(opt);
   });
 }
@@ -353,7 +348,7 @@ function findClosestOdRow(series, delta) {
   return best;
 }
 
-function buildFirstSignalHintHTML(dateStr, delta, key, minD, maxD) {
+function buildFirstSignalHintHTML(dateStr, daysUntilTrip, key, minD, maxD) {
   const fs = firstSignalByKey[key];
   if (!fs) return null;
 
@@ -363,15 +358,16 @@ function buildFirstSignalHintHTML(dateStr, delta, key, minD, maxD) {
   start.setDate(depDate.getDate() - fs.median);
   const startStr = formatISODate(start);
 
-  // borne "entre J-a et J-b" (on affiche en ordre décroissant lisible)
+  // borne (on affiche en ordre lisible)
   const a = Math.max(fs.p25, fs.p75);
   const b = Math.min(fs.p25, fs.p75);
 
   return (
-    `📅 <strong>Date lointaine</strong> : à J-${delta}, on est hors historique OD (${minD} → ${maxD}).<br>` +
-    `🔔 <strong>Premier signal typique</strong> : vers <strong>J-${fs.median}</strong> ` +
-    `(souvent entre <strong>J-${a}</strong> et <strong>J-${b}</strong>, basé sur ${fs.n} départs).<br>` +
-    `➡️ Pour un départ le <strong>${dateStr}</strong>, commence à surveiller autour du <strong>${startStr}</strong>.`
+    `🗓️ <strong>Petit heads-up</strong> : ton départ est dans <strong>${daysUntilTrip} jours</strong>, ` +
+    `et on a peu d’historique à cette distance pour ce trajet (on connaît surtout la zone <strong>0 → ${maxD}</strong> jours avant départ).<br>` +
+    `🔔 <strong>En général, ça commence à bouger</strong> vers <strong>${fs.median} jours</strong> avant le départ ` +
+    `(souvent entre <strong>${b}</strong> et <strong>${a}</strong> jours avant, d’après <strong>${fs.n}</strong> départs).<br>` +
+    `➡️ Pour un départ le <strong>${dateStr}</strong>, tu peux commencer à checker autour du <strong>${startStr}</strong>.`
   );
 }
 
@@ -383,7 +379,7 @@ async function onComputeClick() {
   resetMessages();
 
   if (!dateStr || !origin || !dest) {
-    setStatus("Merci de sélectionner une date, une origine et une destination.", "warning");
+    setStatus("Il me manque un truc 🙂 Choisis une date, une gare de départ et une gare d’arrivée.", "warning");
     return;
   }
 
@@ -400,28 +396,30 @@ async function onComputeClick() {
   if (btn) btn.disabled = false;
 
   const key = odKey(origin, dest);
-  const delta = computeDeltaDaysFromToday(dateStr);
+
+  // daysUntilTrip = nombre de jours avant le départ (0 = aujourd’hui)
+  const daysUntilTrip = computeDeltaDaysFromToday(dateStr);
 
   const dv = $("delta-value");
-  if (dv) dv.textContent = String(delta);
+  if (dv) dv.textContent = String(daysUntilTrip);
 
-  // 1) snapshot du jour
+  // 1) statut du jour
   updateTodayBadge(dateStr, origin, dest);
 
-  // 2) proba OD uniquement
+  // 2) proba
   const series = odByKey[key] || [];
 
   let odRow = null;
   let odProb = null;
 
   if (series.length) {
-  // règle KPI :
-  // - si delta ∈ [0;30] => closest
-  // - sinon => max sur [0;30]
-    if (delta < 0 || delta > 30) {
+    // règle KPI :
+    // - si le départ est entre aujourd’hui et 30 jours => on prend la valeur la plus proche
+    // - sinon => on affiche la meilleure chance observée sur la période connue
+    if (daysUntilTrip < 0 || daysUntilTrip > 30) {
       odRow = getMaxProba(series);
     } else {
-      odRow = findClosestOdRow(series, delta);
+      odRow = findClosestOdRow(series, daysUntilTrip);
     }
     odProb = odRow ? odRow.proba_open : null;
   }
@@ -429,7 +427,7 @@ async function onComputeClick() {
   if (odProb == null) {
     const pv = $("probability-value");
     if (pv) pv.textContent = "–";
-    setStatus("Aucune donnée pour ce trajet (OD). Choisis un autre trajet.", "warning");
+    setStatus("Aïe… je n’ai pas d’historique pour ce trajet. Essaie un autre duo de gares.", "warning");
     drawChart(series, key);
     return;
   }
@@ -438,26 +436,26 @@ async function onComputeClick() {
   if (pv) pv.textContent = (odProb * 100).toFixed(0) + " %";
 
   if (odProb >= 0.5) {
-    setStatus("Fortes chances d'ouverture TGVmax pour ce trajet.", "positive");
+    setStatus("Ça sent bon 😄 Bonne chance de trouver du TGVmax sur ce trajet.", "positive");
   } else if (odProb <= 0.3) {
-    setStatus("Faibles chances d'ouverture TGVmax pour ce trajet.", "negative");
+    setStatus("Plutôt compliqué 😬 Chances faibles sur ce trajet.", "negative");
   } else {
-    setStatus("Zone grise : ouverture TGVmax incertaine.", "neutral");
+    setStatus("Mitigé 🤔 Ça peut passer comme ça peut ne pas passer.", "neutral");
   }
 
+  // message “date lointaine” (hors zone d’historique)
   if (series.length) {
     const minD = series[0].delta_days;
     const maxD = series[series.length - 1].delta_days;
 
-    if (delta < minD || delta > maxD) {
-      // warning amélioré + "premier signal" si dispo
-      const html = buildFirstSignalHintHTML(dateStr, delta, key, minD, maxD);
+    if (daysUntilTrip < minD || daysUntilTrip > maxD) {
+      const html = buildFirstSignalHintHTML(dateStr, daysUntilTrip, key, minD, maxD);
       if (html) {
         showWarning(html);
       } else {
         showWarning(
-          `Delta ${delta} hors de la plage observée pour ce trajet (${minD} → ${maxD}). ` +
-          "La proba OD est basée sur le delta le plus proche."
+          `👀 Info : ton départ est dans <strong>${daysUntilTrip} jours</strong>. ` +
+            `Je me base sur la zone d’historique la plus proche (en gros <strong>${minD} → ${maxD}</strong> jours avant départ).`
         );
       }
     }
@@ -475,9 +473,9 @@ async function onComputeClick() {
         origin: normStation(origin),
         destination: normStation(dest),
         key,
-        delta,
+        days_until_trip: daysUntilTrip,
         snapshot_lookup: snapshotToday?.[normText(dateStr)]?.[key],
-        od_used: odRow,
+        proba_used: odRow,
         has_series: series.length,
         first_signal: firstSignalByKey[key] || null,
       },
@@ -487,7 +485,7 @@ async function onComputeClick() {
   }
 }
 
-// ===== 9. Bandeau "dispo aujourd'hui" ===================================
+// ===== 9. Bandeau "statut du jour" ======================================
 
 function updateTodayBadge(departureDateStr, origin, dest) {
   const badge = $("today-badge");
@@ -498,23 +496,23 @@ function updateTodayBadge(departureDateStr, origin, dest) {
 
   const byDate = snapshotToday[dep];
   if (!byDate) {
-    badge.textContent = `Snapshot du jour : aucun statut pour la date ${dep}`;
+    badge.textContent = `Statut du jour : je n’ai rien pour la date ${dep} (ça arrive).`;
     badge.className = "badge badge--unknown";
     return;
   }
 
   const val = byDate[key];
   if (val === undefined) {
-    badge.textContent = "Snapshot du jour : statut inconnu pour ce trajet";
+    badge.textContent = "Statut du jour : je n’ai pas l’info pour ce trajet.";
     badge.className = "badge badge--unknown";
     return;
   }
 
   if (val) {
-    badge.textContent = "Snapshot du jour : TGVmax DISPONIBLE sur ce trajet";
+    badge.textContent = "Statut du jour : TGVmax dispo 🎉";
     badge.className = "badge badge--open";
   } else {
-    badge.textContent = "Snapshot du jour : TGVmax NON disponible sur ce trajet";
+    badge.textContent = "Statut du jour : pas de TGVmax sur ce trajet 😕";
     badge.className = "badge badge--closed";
   }
 }
@@ -534,12 +532,12 @@ function drawChart(series, key) {
   if (!series || !series.length) {
     chartInstance = new Chart(ctx, {
       type: "line",
-      data: { labels: [], datasets: [{ label: "Pas de données OD", data: [] }] },
+      data: { labels: [], datasets: [{ label: "Pas d’historique pour ce trajet", data: [] }] },
       options: {
         plugins: { legend: { display: false } },
         scales: {
-          x: { title: { display: true, text: "delta_days" } },
-          y: { title: { display: true, text: "proba_open" }, min: 0, max: 1 },
+          x: { title: { display: true, text: "Jours avant le départ" } },
+          y: { title: { display: true, text: "Chance d’ouverture" }, min: 0, max: 1 },
         },
       },
     });
@@ -555,7 +553,7 @@ function drawChart(series, key) {
       labels,
       datasets: [
         {
-          label: `Proba d'ouverture – ${key.replace("||", " → ")}`,
+          label: `Chance d’ouverture – ${key.replace("||", " → ")}`,
           data,
           tension: 0.2,
           pointRadius: 2,
@@ -565,8 +563,8 @@ function drawChart(series, key) {
     options: {
       plugins: { legend: { display: false } },
       scales: {
-        x: { title: { display: true, text: "delta_days" } },
-        y: { title: { display: true, text: "proba_open" }, min: 0, max: 1 },
+        x: { title: { display: true, text: "Jours avant le départ" } },
+        y: { title: { display: true, text: "Chance d’ouverture" }, min: 0, max: 1 },
       },
     },
   });
@@ -587,7 +585,7 @@ function showFatalError(msg) {
 }
 
 function resetMessages() {
-  setStatus("Calcul en attente…", "neutral");
+  setStatus("Prêt quand tu l’es 🙂", "neutral");
   const w = $("warning-box");
   if (w) {
     w.classList.add("hidden");
