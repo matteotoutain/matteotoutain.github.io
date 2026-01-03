@@ -1,8 +1,6 @@
 name: Update ads.txt (Ezoic)
 
 on:
-  schedule:
-    - cron: "17 3 * * *" # tous les jours à 03:17 UTC
   workflow_dispatch:
 
 permissions:
