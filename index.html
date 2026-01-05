@@ -642,5 +642,23 @@
     });
   });
 </script>
+
+<script>
+(function forceEzZIndex(){
+  const apply = () => {
+    const el = document.querySelector('#ez-cookie-dialog-wrapper #ez-cookie-dialog.ez_banner');
+    if (!el) return false;
+    el.style.setProperty('z-index', '1', 'important');
+    return true;
+  };
+
+  // Essaye tout de suite
+  if (apply()) return;
+
+  // Sinon, observe les injections Ezoic
+  const obs = new MutationObserver(() => { if (apply()) obs.disconnect(); });
+  obs.observe(document.documentElement, { childList: true, subtree: true });
+})();
+</script>
 </body>
 </html>
