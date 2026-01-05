@@ -1097,6 +1097,7 @@ code{
 
 
 #ezPrivacyCenter {
+  
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1126,7 +1127,7 @@ code{
 
     box-shadow: 0 4px 16px rgba(0,0,0,.15) !important;
 
-    z-index: 2147483631 !important;
+    z-index: 2 !important;
 
     padding: 0 !important;
     margin: 0 !important;
