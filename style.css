@@ -1168,3 +1168,12 @@ html body #ez-cookie-dialog-wrapper #ez-cookie-dialog.ez_banner {
   position: fixed !important;
 }
 
+html body #ez-cookie-dialog-wrapper #ez-cookie-dialog.ez_banner {
+  border-top: 5px solid #8ee8fe !important;
+}
+
+html body #ez-cookie-dialog-wrapper #ez-cookie-dialog.ez_banner #ez-accept-all {
+  background: #8ee8fe !important;
+}
+
+
