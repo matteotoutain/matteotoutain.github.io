@@ -644,32 +644,37 @@
 </script>
 
 <script>
-(function forceEzBannerZIndex(){
-  const apply = () => {
-    const el = document.querySelector(
-      '#ez-cookie-dialog-wrapper #ez-cookie-dialog.ez_banner'
-    );
-    if (!el) return false;
+(function lockEzZ(){
+  const force = () => {
+    const wrap = document.getElementById('ez-cookie-dialog-wrapper');
+    const dlg  = document.querySelector('#ez-cookie-dialog-wrapper #ez-cookie-dialog.ez_banner');
+    const btn  = document.getElementById('ezPrivacyCenter');
 
-    // Forcer le banner cookie en arrière-plan
-    el.style.setProperty('z-index', '1', 'important');
-    el.style.setProperty('position', 'fixed', 'important');
+    if (wrap) wrap.style.setProperty('z-index', '1', 'important');
+    if (dlg)  dlg.style.setProperty('z-index', '1', 'important');
 
-    return true;
+    if (btn) {
+      btn.style.setProperty('z-index', '2147483647', 'important');
+      btn.style.setProperty('position', 'fixed', 'important');
+      btn.style.setProperty('left', '10px', 'important');
+      btn.style.setProperty('bottom', '10px', 'important');
+    }
+
+    // vrai retour: on veut continuer même si un des 3 manque
+    return !!(wrap || dlg || btn);
   };
 
-  // Tentative immédiate
-  if (apply()) return;
+  // 1) maintenant
+  force();
 
-  // Fallback : attendre l’injection Ezoic
-  const obs = new MutationObserver(() => {
-    if (apply()) obs.disconnect();
-  });
+  // 2) reforce (Ezoic réinjecte souvent)
+  const iv = setInterval(force, 300);
+  setTimeout(() => clearInterval(iv), 8000); // suffisant pour les injections tardives
 
-  obs.observe(document.documentElement, {
-    childList: true,
-    subtree: true
-  });
+  // 3) et on observe aussi
+  const obs = new MutationObserver(force);
+  obs.observe(document.documentElement, { childList: true, subtree: true });
+  setTimeout(() => obs.disconnect(), 12000);
 })();
 </script>
 </body>
