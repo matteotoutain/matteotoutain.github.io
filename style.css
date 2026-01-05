@@ -1094,3 +1094,60 @@ code{
 .ez_banner .ez-main-cmp-wrapper .ez-twentytwentytwo{
   z-index: 2 !important;
 }
+
+
+#ezPrivacyCenter {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    position: fixed !important;
+    left: 10px !important;
+    bottom: 10px !important;
+
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+
+    background: #111213 !important;
+    background-color: #111213 !important;
+    color: #ffffff !important;
+
+    font-size: 18px !important;
+    font-family: Helvetica, Arial, sans-serif !important;
+    line-height: 1 !important;
+
+    border-radius: 40px !important;
+    border: none !important;
+    outline: 0 !important;
+
+    cursor: pointer !important;
+
+    box-shadow: 0 4px 16px rgba(0,0,0,.15) !important;
+
+    z-index: 2147483631 !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    opacity: 1 !important;
+
+    writing-mode: initial !important;
+    transform: none !important;
+    letter-spacing: 0 !important;
+
+    transition:
+        transform .2s ease !important,
+        box-shadow .2s ease !important,
+        opacity .3s ease !important;
+}
+
+#ezPrivacyCenter:hover {
+    transform: scale(1.06) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,.25) !important;
+}
+
+#ezPrivacyCenter:active {
+    transform: scale(0.96) !important;
+}
