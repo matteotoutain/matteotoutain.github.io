@@ -1091,7 +1091,7 @@ code{
   }
 }
 
-.ez_banner .ez-main-cmp-wrapper .ez-twentytwentytwo{
+#ez-cookie-dialog-wrapper #ez-cookie-dialog.ez_banner{
   z-index: 2 !important;
 }
 
