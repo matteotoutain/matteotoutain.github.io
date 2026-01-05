@@ -644,20 +644,32 @@
 </script>
 
 <script>
-(function forceEzZIndex(){
+(function forceEzBannerZIndex(){
   const apply = () => {
-    const el = document.querySelector('#ez-cookie-dialog-wrapper #ez-cookie-dialog.ez_banner');
+    const el = document.querySelector(
+      '#ez-cookie-dialog-wrapper #ez-cookie-dialog.ez_banner'
+    );
     if (!el) return false;
+
+    // Forcer le banner cookie en arrière-plan
     el.style.setProperty('z-index', '1', 'important');
+    el.style.setProperty('position', 'fixed', 'important');
+
     return true;
   };
 
-  // Essaye tout de suite
+  // Tentative immédiate
   if (apply()) return;
 
-  // Sinon, observe les injections Ezoic
-  const obs = new MutationObserver(() => { if (apply()) obs.disconnect(); });
-  obs.observe(document.documentElement, { childList: true, subtree: true });
+  // Fallback : attendre l’injection Ezoic
+  const obs = new MutationObserver(() => {
+    if (apply()) obs.disconnect();
+  });
+
+  obs.observe(document.documentElement, {
+    childList: true,
+    subtree: true
+  });
 })();
 </script>
 </body>
