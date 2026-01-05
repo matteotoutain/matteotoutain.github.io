@@ -1090,3 +1090,7 @@ code{
     margin-bottom: -2px;
   }
 }
+
+.ez_banner .ez-main-cmp-wrapper .ez-twentytwentytwo{
+  z-index: 2 !important;
+}
